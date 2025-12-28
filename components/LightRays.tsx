@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { Renderer, Program, Triangle, Mesh } from "ogl";
+import posthog from "posthog-js";
 
 export type RaysOrigin =
   | "top-center"
@@ -327,6 +328,7 @@ void main() {
           animationIdRef.current = requestAnimationFrame(loop);
         } catch (error) {
           console.warn("WebGL rendering error:", error);
+          posthog.captureException(error as Error);
           return;
         }
       };
@@ -357,6 +359,7 @@ void main() {
             }
           } catch (error) {
             console.warn("Error during WebGL cleanup:", error);
+            posthog.captureException(error as Error);
           }
         }
 
