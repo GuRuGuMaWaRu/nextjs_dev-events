@@ -1,0 +1,51 @@
+export const events = [
+  {
+    title: "ReactConf 2026",
+    image: "/images/event1.png",
+    slug: "reactconf-2026",
+    location: "Henderson, Nevada",
+    date: "2026-05-14",
+    time: "09:00",
+  },
+  {
+    title: "Google I/O 2026",
+    image: "/images/event2.png",
+    slug: "google-io-2026",
+    location: "Mountain View, California",
+    date: "2026-05-12",
+    time: "10:00",
+  },
+  {
+    title: "AWS re:Invent 2026",
+    image: "/images/event3.png",
+    slug: "aws-reinvent-2026",
+    location: "Las Vegas, Nevada",
+    date: "2026-11-30",
+    time: "08:00",
+  },
+  {
+    title: "Microsoft Build 2026",
+    image: "/images/event4.png",
+    slug: "microsoft-build-2026",
+    location: "Seattle, Washington",
+    date: "2026-05-19",
+    time: "09:00",
+  },
+  {
+    title: "HackMIT 2026",
+    image: "/images/event5.png",
+    slug: "hackmit-2026",
+    location: "Cambridge, Massachusetts",
+    date: "2026-09-19",
+    time: "10:00",
+  },
+  {
+    title: "GitHub Universe 2026",
+    image: "/images/event6.png",
+    slug: "github-universe-2026",
+    location: "San Francisco, California",
+    date: "2026-11-10",
+    time: "09:00",
+  },
+];
+
