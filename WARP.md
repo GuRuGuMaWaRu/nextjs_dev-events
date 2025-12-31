@@ -80,6 +80,31 @@ All components live in `components/` and are imported using the `@/*` alias.
 - `lib/utils.ts`
   - Defines a single `cn` helper that merges class names using `clsx` and `tailwind-merge`. Prefer this for composing Tailwind className strings.
 
+### Database layer (MongoDB with Mongoose)
+
+- `lib/mongodb.ts`
+  - MongoDB connection utility using Mongoose with connection caching for Next.js hot reloads.
+  - Exports `connectToDatabase()` function that reuses existing connections via `globalThis.mongooseCache`.
+  - Requires `MONGODB_URI` environment variable.
+  - Configures `autoIndex` based on `NODE_ENV` (enabled in development, disabled in production for performance).
+
+- `database/event.model.ts`
+  - Mongoose model for Event documents with schema validation, pre-save hooks, and instance/static methods.
+  - Fields include: title, slug (unique, auto-generated), description, overview, image, venue, location, date (normalized to YYYY-MM-DD UTC), time (normalized to HH:mm), mode (enum: online/offline/hybrid), audience, agenda, organizer, tags.
+  - Pre-save hook normalizes date/time formats, generates unique slugs, and validates URLs and array fields.
+  - Instance method: `isPast()` checks if event date/time is in the past (using UTC semantics).
+  - Static methods: `findUpcoming(limit?)` and `findByMode(mode, limit?)` for querying events.
+
+- `database/booking.model.ts`
+  - Mongoose model for Booking documents linking users (via email) to events (via eventId).
+  - Fields include: eventId (ObjectId reference to Event), email (validated, unique per event via compound index).
+  - Pre-save hook validates that the referenced event exists and prevents bookings for past events.
+  - Static methods: `findByEvent(eventId)`, `findByEmail(email)`, `countByEvent(eventId)` for querying bookings.
+  - Unique compound index on `{ eventId, email }` prevents duplicate bookings.
+
+- `database/index.ts`
+  - Barrel export file that re-exports `Event` and `Booking` models for convenient imports.
+
 ### Analytics and instrumentation (PostHog)
 
 - Global PostHog initialization lives in `instrumentation-client.ts` (Next.js 15.3+ style client instrumentation):
