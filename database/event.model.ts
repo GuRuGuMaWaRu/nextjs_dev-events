@@ -84,8 +84,10 @@ const eventSchema = new Schema<EventDocument, EventModel>(
       type: String,
       required: true,
       trim: true,
-      enum: VALID_EVENT_MODES,
-      message: "Mode must be one of: online, offline, or hybrid.",
+      enum: {
+        values: VALID_EVENT_MODES,
+        message: "Mode must be one of: online, offline, or hybrid.",
+      },
     },
     audience: {
       type: String,
@@ -289,17 +291,6 @@ eventSchema.pre("save", async function (this: EventDocument, next: any) {
     if (this.isModified("image") || this.isNew) {
       if (!isValidUrl(this.image)) {
         return next(new Error("Image must be a valid HTTP or HTTPS URL."));
-      }
-    }
-
-    // Validate event mode enum (redundant with schema enum, but provides better error message).
-    if (this.isModified("mode") || this.isNew) {
-      if (!VALID_EVENT_MODES.includes(this.mode as EventMode)) {
-        return next(
-          new Error(
-            `Invalid mode. Must be one of: ${VALID_EVENT_MODES.join(", ")}.`
-          )
-        );
       }
     }
 
