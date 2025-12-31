@@ -193,16 +193,57 @@ function isValidUrl(url: string): boolean {
 }
 
 // Normalize a date-like string into `YYYY-MM-DD` (ISO calendar date).
+// Parses dates consistently by extracting calendar date components and constructing UTC dates,
+// avoiding timezone-induced date shifts that occur with inconsistent Date parsing.
 function normalizeDate(value: string): string {
   const trimmed = value.trim();
-  const parsed = new Date(trimmed);
 
+  // If already in YYYY-MM-DD format, validate and return it (treating as UTC calendar date).
+  const isoDateRegex = /^(\d{4})-(\d{2})-(\d{2})$/;
+  const isoMatch = trimmed.match(isoDateRegex);
+
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1], 10);
+    const month = parseInt(isoMatch[2], 10);
+    const day = parseInt(isoMatch[3], 10);
+
+    // Validate the date components.
+    const utcDate = Date.UTC(year, month - 1, day);
+    if (Number.isNaN(utcDate)) {
+      throw new Error("Invalid date format. Expected a parseable date value.");
+    }
+
+    // Verify the components match (catches invalid dates like 2025-13-45).
+    const constructed = new Date(utcDate);
+    if (
+      constructed.getUTCFullYear() !== year ||
+      constructed.getUTCMonth() !== month - 1 ||
+      constructed.getUTCDate() !== day
+    ) {
+      throw new Error("Invalid date format. Expected a parseable date value.");
+    }
+
+    return trimmed;
+  }
+
+  // For other formats, parse and extract calendar date components, then construct UTC date.
+  const parsed = new Date(trimmed);
   if (Number.isNaN(parsed.getTime())) {
     throw new Error("Invalid date format. Expected a parseable date value.");
   }
 
-  // Use the UTC ISO date part only to avoid timezone drift.
-  return parsed.toISOString().slice(0, 10);
+  // Extract calendar date components from the parsed date (using local time interpretation).
+  // Then construct a UTC date from those components to avoid timezone shifts.
+  const year = parsed.getFullYear();
+  const month = parsed.getMonth() + 1; // getMonth() returns 0-11
+  const day = parsed.getDate();
+
+  // Construct UTC date from the calendar date components.
+  const utcDate = Date.UTC(year, month - 1, day);
+  const normalized = new Date(utcDate);
+
+  // Return the UTC ISO date part.
+  return normalized.toISOString().slice(0, 10);
 }
 
 // Normalize a time string to 24-hour `HH:mm` format.
