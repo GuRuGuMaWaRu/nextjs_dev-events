@@ -70,28 +70,10 @@ bookingSchema.index({ createdAt: -1 }); // For sorting by newest first
 // This also serves as an index for queries filtering by both eventId and email.
 bookingSchema.index({ eventId: 1, email: 1 }, { unique: true });
 
-// Basic RFC5322-inspired but pragmatic email validation regex.
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function isValidEmail(email: string): boolean {
-  return EMAIL_REGEX.test(email);
-}
-
-// Pre-save hook validates email formatting and verifies that the referenced event exists.
+// Pre-save hook verifies that the referenced event exists.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 bookingSchema.pre("save", async function (this: BookingDocument, next: any) {
   try {
-    // Validate email format (schema validation handles this, but provides better error message).
-    if (this.isModified("email") || this.isNew) {
-      if (!isValidEmail(this.email)) {
-        return next(
-          new Error(
-            "Invalid email format. Please provide a valid email address."
-          )
-        );
-      }
-    }
-
     // Only perform the existence check when eventId is new or has changed.
     if (this.isModified("eventId") || this.isNew) {
       const event = await Event.findById(this.eventId);
