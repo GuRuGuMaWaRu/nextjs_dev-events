@@ -131,9 +131,6 @@ const eventSchema = new Schema<EventDocument, EventModel>(
   }
 );
 
-// Ensure a unique index on slug at the database level.
-eventSchema.index({ slug: 1 }, { unique: true });
-
 // Performance indexes for common query patterns.
 eventSchema.index({ date: 1, mode: 1 }); // For filtering events by date and mode
 eventSchema.index({ organizer: 1 }); // For finding events by organizer
