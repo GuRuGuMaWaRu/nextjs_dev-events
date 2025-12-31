@@ -65,7 +65,10 @@ export async function connectToDatabase(): Promise<Mongoose> {
         // These options are defaults in recent Mongoose versions but are
         // included here for clarity and explicitness.
         // You can add more options here if needed (e.g. readPreference).
-        autoIndex: true,
+        // Disable autoIndex in production to avoid rebuilding indexes on every connection,
+        // which can degrade startup performance and cause issues with large collections.
+        // Indexes should be managed via migrations/deployments in production.
+        autoIndex: process.env.NODE_ENV !== "production",
       })
       .then((mongooseInstance) => {
         return mongooseInstance;
