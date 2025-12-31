@@ -309,7 +309,8 @@ eventSchema.pre("save", async function (this: EventDocument, next: any) {
 
 // Instance method to check if event date is in the past.
 eventSchema.methods.isPast = function (this: EventDocument): boolean {
-  const eventDateTime = new Date(`${this.date}T${this.time}`);
+  // Parse event datetime as UTC to match how this.date is stored (normalized from UTC).
+  const eventDateTime = new Date(`${this.date}T${this.time}Z`);
   return eventDateTime < new Date();
 };
 

@@ -104,7 +104,8 @@ bookingSchema.pre("save", async function (this: BookingDocument, next: any) {
       }
 
       // Prevent booking for past events.
-      const eventDateTime = new Date(`${event.date}T${event.time}`);
+      // Parse event datetime as UTC to match how event.date is stored (normalized from UTC).
+      const eventDateTime = new Date(`${event.date}T${event.time}Z`);
       if (eventDateTime < new Date()) {
         return next(
           new Error(
