@@ -9,7 +9,7 @@ const VALID_EVENT_MODES: EventMode[] = ["online", "offline", "hybrid"];
 // Attributes required to create an Event.
 export interface EventAttrs {
   title: string;
-  slug?: string;
+  slug: string;
   description: string;
   overview: string;
   image: string;
