@@ -1,2 +1,12 @@
-export { Event } from './event.model';
-export { Booking } from './booking.model';
+export {
+  Event,
+  type EventAttrs,
+  type EventDocument,
+  type EventModel,
+} from "./event.model";
+export {
+  Booking,
+  type BookingAttrs,
+  type BookingDocument,
+  type BookingModel,
+} from "./booking.model";
