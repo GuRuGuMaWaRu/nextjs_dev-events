@@ -71,35 +71,24 @@ bookingSchema.index({ createdAt: -1 }); // For sorting by newest first
 bookingSchema.index({ eventId: 1, email: 1 }, { unique: true });
 
 // Pre-save hook verifies that the referenced event exists.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-bookingSchema.pre("save", async function (this: BookingDocument, next: any) {
-  try {
-    // Only perform the existence check when eventId is new or has changed.
-    if (this.isModified("eventId") || this.isNew) {
-      const event = await Event.findById(this.eventId);
-      if (!event) {
-        return next(
-          new Error(
-            "Referenced event does not exist. Cannot create booking for non-existent event."
-          )
-        );
-      }
-
-      // Prevent booking for past events.
-      // Parse event datetime as UTC to match how event.date is stored (normalized from UTC).
-      const eventDateTime = new Date(`${event.date}T${event.time}Z`);
-      if (eventDateTime < new Date()) {
-        return next(
-          new Error(
-            "Cannot create booking for past events. Please select an upcoming event."
-          )
-        );
-      }
+bookingSchema.pre("save", async function (this: BookingDocument) {
+  // Only perform the existence check when eventId is new or has changed.
+  if (this.isModified("eventId") || this.isNew) {
+    const event = await Event.findById(this.eventId);
+    if (!event) {
+      throw new Error(
+        "Referenced event does not exist. Cannot create booking for non-existent event."
+      );
     }
 
-    next();
-  } catch (error) {
-    next(error as Error);
+    // Prevent booking for past events.
+    // Parse event datetime as UTC to match how event.date is stored (normalized from UTC).
+    const eventDateTime = new Date(`${event.date}T${event.time}Z`);
+    if (eventDateTime < new Date()) {
+      throw new Error(
+        "Cannot create booking for past events. Please select an upcoming event."
+      );
+    }
   }
 });
 
