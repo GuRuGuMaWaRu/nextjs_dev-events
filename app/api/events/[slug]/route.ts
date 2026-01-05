@@ -22,9 +22,16 @@ export async function GET(
       );
     }
 
-    const event = await Event.findOne({ slug }).select("-__v").lean();
+    const sanitizedSlug = slug.trim().toLowerCase();
+
+    const event = await Event.findOne({ slug: sanitizedSlug })
+      .select("-__v")
+      .lean();
     if (!event) {
-      return NextResponse.json({ message: "Event not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: `Event with slug "${sanitizedSlug}" not found` },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(
