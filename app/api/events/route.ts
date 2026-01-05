@@ -109,7 +109,7 @@ export async function GET() {
     console.error(error);
     return NextResponse.json(
       {
-        message: "Event fetching failed",
+        message: "Events fetching failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
