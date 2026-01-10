@@ -9,7 +9,7 @@ const VALID_EVENT_MODES: EventMode[] = ["online", "offline", "hybrid"];
 // Attributes required to create an Event.
 export interface EventAttrs {
   title: string;
-  slug?: string;
+  slug: string;
   description: string;
   overview: string;
   image: string;
@@ -281,58 +281,49 @@ function normalizeTime(value: string): string {
 }
 
 // Pre-save hook to generate slug, normalize date/time, and validate custom constraints.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-eventSchema.pre("save", async function (this: EventDocument, next: any) {
-  try {
-    // Validate image URL format.
-    if (this.isModified("image") || this.isNew) {
-      if (!isValidUrl(this.image)) {
-        return next(new Error("Image must be a valid HTTP or HTTPS URL."));
-      }
+eventSchema.pre("save", async function (this: EventDocument) {
+  // Validate image URL format.
+  if (this.isModified("image") || this.isNew) {
+    if (!isValidUrl(this.image)) {
+      throw new Error("Image must be a valid HTTP or HTTPS URL.");
     }
+  }
 
-    // Validate array fields contain non-empty strings.
-    const arrayFields: Array<keyof Pick<EventDocument, "agenda" | "tags">> = [
-      "agenda",
-      "tags",
-    ];
-    for (const field of arrayFields) {
-      const value = this[field];
-      if (!Array.isArray(value) || value.length === 0) {
-        return next(new Error(`Field "${field}" must be a non-empty array.`));
-      }
-      const hasInvalidItem = value.some(
-        (item) => typeof item !== "string" || item.trim().length === 0
-      );
-      if (hasInvalidItem) {
-        return next(
-          new Error(`Field "${field}" must contain only non-empty strings.`)
-        );
-      }
+  // Validate array fields contain non-empty strings.
+  const arrayFields: Array<keyof Pick<EventDocument, "agenda" | "tags">> = [
+    "agenda",
+    "tags",
+  ];
+  for (const field of arrayFields) {
+    const value = this[field];
+    if (!Array.isArray(value) || value.length === 0) {
+      throw new Error(`Field "${field}" must be a non-empty array.`);
     }
+    const hasInvalidItem = value.some(
+      (item) => typeof item !== "string" || item.trim().length === 0
+    );
+    if (hasInvalidItem) {
+      throw new Error(`Field "${field}" must contain only non-empty strings.`);
+    }
+  }
 
-    // Generate unique slug when title changes or slug is missing.
-    if (this.isModified("title") || !this.slug) {
-      const baseSlug = slugifyTitle(this.title);
-      if (!baseSlug) {
-        return next(new Error("Title cannot be converted to a valid slug."));
-      }
-      const excludeId = this.isNew ? undefined : this._id.toString();
-      const EventModel = this.constructor as EventModel;
-      this.slug = await generateUniqueSlug(EventModel, baseSlug, excludeId);
+  // Generate unique slug when title changes or slug is missing.
+  if (this.isModified("title") || !this.slug) {
+    const baseSlug = slugifyTitle(this.title);
+    if (!baseSlug) {
+      throw new Error("Title cannot be converted to a valid slug.");
     }
+    const excludeId = this.isNew ? undefined : this._id.toString();
+    const EventModel = this.constructor as EventModel;
+    this.slug = await generateUniqueSlug(EventModel, baseSlug, excludeId);
+  }
 
-    // Normalize date and time representations for consistent storage.
-    if (this.isModified("date") || this.isNew) {
-      this.date = normalizeDate(this.date);
-    }
-    if (this.isModified("time") || this.isNew) {
-      this.time = normalizeTime(this.time);
-    }
-
-    next();
-  } catch (error) {
-    next(error as Error);
+  // Normalize date and time representations for consistent storage.
+  if (this.isModified("date") || this.isNew) {
+    this.date = normalizeDate(this.date);
+  }
+  if (this.isModified("time") || this.isNew) {
+    this.time = normalizeTime(this.time);
   }
 });
 

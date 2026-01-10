@@ -1,8 +1,11 @@
 import { ExploreBtn } from "@/components/ExploreBtn";
 import { EventCard } from "@/components/EventCard";
-import { events } from "@/lib/constants";
+import { EventDocument } from "@/database";
 
-const Page = () => {
+const Page = async () => {
+  const events = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/events`);
+  const eventsData = await events.json();
+
   return (
     <section>
       <h1 className="text-center">
@@ -17,11 +20,14 @@ const Page = () => {
       <div id="events" className="mt-20 space-y-7">
         <h2 className="text-center text-2xl font-bold">Upcoming Events</h2>
         <ul className="events list-none">
-          {events.map((event) => (
-            <li key={event.title}>
-              <EventCard {...event} />
-            </li>
-          ))}
+          {eventsData.error && <div>Error: {eventsData.error}</div>}
+          {eventsData.events.length === 0 && <div>No events found</div>}
+          {eventsData.events &&
+            eventsData.events.map((event: EventDocument) => (
+              <li key={event.title}>
+                <EventCard {...event} />
+              </li>
+            ))}
         </ul>
       </div>
     </section>
