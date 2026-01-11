@@ -16,13 +16,17 @@ export const getSimilarEventsBySlugAction = async (slug: string) => {
       _id: { $ne: event._id },
       tags: { $in: event.tags },
     })
-      .select(
-        "-__v -_id -createdAt -updatedAt -overview -venue -time -mode -audience -agenda -organizer -tags -description"
-      )
       .limit(3)
       .lean();
 
-    return similarEvents;
+    return similarEvents.map((event) => ({
+      title: event.title,
+      image: event.image,
+      slug: event.slug,
+      location: event.location,
+      date: event.date,
+      time: event.time,
+    }));
   } catch (error) {
     console.error(error);
     return [];
