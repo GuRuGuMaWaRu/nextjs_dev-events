@@ -57,8 +57,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tags = JSON.parse(formData.get("tags") as string);
-    const agenda = JSON.parse(formData.get("agenda") as string);
+    const tagsRaw = formData.get("tags");
+    const agendaRaw = formData.get("agenda");
+
+    if (!tagsRaw || !agendaRaw) {
+      return NextResponse.json(
+        { message: "Tags and agenda are required" },
+        { status: 400 }
+      );
+    }
+
+    let parsedTags: string[];
+    let parsedAgenda: string[];
+
+    try {
+      parsedTags = JSON.parse(tagsRaw as string) as string[];
+      parsedAgenda = JSON.parse(agendaRaw as string) as string[];
+    } catch (error) {
+      console.error(error);
+      return NextResponse.json(
+        { message: "Invalid tags or agenda format" },
+        { status: 400 }
+      );
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -84,8 +105,8 @@ export async function POST(request: NextRequest) {
 
     const createdEvent = await Event.create({
       ...event,
-      tags,
-      agenda,
+      tags: parsedTags,
+      agenda: parsedAgenda,
     });
 
     return NextResponse.json(
