@@ -35,21 +35,33 @@ export const getSimilarEventsBySlugAction = async (slug: string) => {
   }
 };
 
-export const validateBooking = async (email: string, eventId: string) => {
-  const booking = await Booking.findOne({ email, eventId });
-  if (booking) {
-    return { success: false, error: "You have already booked this event." };
+export const validateBookingAction = async (email: string, eventId: string) => {
+  try {
+    await connectToDatabase();
+    const booking = await Booking.findOne({ email, eventId });
+    if (booking) {
+      return { success: false, error: "You have already booked this event." };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to validate booking" };
   }
-  return { success: true };
 };
 
-export const bookEvent = async (email: string, eventId: string) => {
-  const isValid = await validateBooking(email, eventId);
-  if (!isValid.success) {
-    return { success: false, error: isValid.error };
+export const bookEventAction = async (email: string, eventId: string) => {
+  try {
+    await connectToDatabase();
+    const isValid = await validateBookingAction(email, eventId);
+    if (!isValid.success) {
+      return { success: false, error: isValid.error };
+    }
+    const booking = await Booking.create({ email, eventId });
+    return { success: true, data: booking };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to book event" };
   }
-  const booking = await Booking.create({ email, eventId });
-  return { success: true, data: booking };
 };
 
 export const getBookingsByEventAction = async (eventId: Types.ObjectId) => {
