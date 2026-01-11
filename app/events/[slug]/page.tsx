@@ -72,7 +72,7 @@ const EventDetailsPage = async ({
           </section>
 
           <section className="flex-col-gap-2">
-            <h2>EventDetails</h2>
+            <h2>Event Details</h2>
 
             <EventDetailItem
               icon="/icons/calendar.svg"
