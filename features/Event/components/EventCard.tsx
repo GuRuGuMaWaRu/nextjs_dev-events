@@ -22,7 +22,6 @@ export function EventCard({ title, image, slug, location, date, time }: Props) {
       event_date: date,
       event_time: time,
     });
-    throw new Error("test");
   };
 
   return (

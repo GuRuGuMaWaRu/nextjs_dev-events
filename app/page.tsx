@@ -1,5 +1,5 @@
 import { ExploreBtn } from "@/components/ExploreBtn";
-import { EventCard } from "@/components/EventCard";
+import { EventCard } from "@/features/Event/components/EventCard";
 import { EventDocument } from "@/database";
 
 const Page = async () => {
