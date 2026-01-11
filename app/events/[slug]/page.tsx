@@ -19,6 +19,15 @@ const EventDetailsPage = async ({
   const request = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${slug}`
   );
+
+  if (!request.ok) {
+    if (request.status === 404) {
+      return notFound();
+    }
+
+    return <div>Error: Failed to fetch event details</div>;
+  }
+
   const { event, error } = await request.json();
 
   if (error) {
