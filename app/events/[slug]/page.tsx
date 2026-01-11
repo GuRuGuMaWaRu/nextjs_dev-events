@@ -5,7 +5,10 @@ import EventDetailItem from "@/features/Event/components/EventDetailItem";
 import EventAgenda from "@/features/Event/components/EventAgenda";
 import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
-import { getSimilarEventsBySlugAction } from "@/features/Event/actions";
+import {
+  getBookingsByEventAction,
+  getSimilarEventsBySlugAction,
+} from "@/features/Event/actions";
 import { EventCard } from "@/features/Event/components/EventCard";
 import { SimilarEvent } from "@/features/Event/types";
 
@@ -38,7 +41,8 @@ const EventDetailsPage = async ({
     return notFound();
   }
 
-  const bookings = 10;
+  const { data: bookings } = await getBookingsByEventAction(event._id);
+  const bookingCount = bookings?.length ?? 0;
 
   const similarEvents: SimilarEvent[] = await getSimilarEventsBySlugAction(
     event.slug
@@ -110,9 +114,9 @@ const EventDetailsPage = async ({
         <aside className="booking">
           <div className="signup-card">
             <h2>Book Your Spot</h2>
-            {bookings > 0 ? (
+            {bookingCount > 0 ? (
               <p className="text-sm">
-                Join {bookings} other people who already booked this event.
+                Join {bookingCount} other people who already booked this event.
               </p>
             ) : (
               <p className="text-sm">Be the first to book your spot.</p>

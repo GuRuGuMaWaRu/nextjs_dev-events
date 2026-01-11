@@ -1,5 +1,7 @@
 "use server";
 
+import { Types } from "mongoose";
+
 import { connectToDatabase } from "@/lib/mongodb";
 import { Booking, Event, type EventDocument } from "@/database";
 
@@ -50,7 +52,13 @@ export const bookEvent = async (email: string, eventId: string) => {
   return { success: true, data: booking };
 };
 
-export const getBookingsByEvent = async (eventId: string) => {
-  const bookings = await Booking.find({ eventId });
-  return { success: true, data: bookings };
+export const getBookingsByEventAction = async (eventId: Types.ObjectId) => {
+  try {
+    await connectToDatabase();
+    const bookings = await Booking.findByEvent(eventId);
+    return { success: true, data: bookings };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Failed to fetch bookings" };
+  }
 };
