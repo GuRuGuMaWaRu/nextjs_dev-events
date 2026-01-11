@@ -7,7 +7,7 @@ import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
 import { getSimilarEventsBySlugAction } from "@/features/Event/actions";
 import { EventCard } from "@/features/Event/components/EventCard";
-import { EventDocument } from "@/database";
+import { SimilarEvent } from "@/features/Event/types";
 
 const EventDetailsPage = async ({
   params,
@@ -31,7 +31,7 @@ const EventDetailsPage = async ({
 
   const bookings = 10;
 
-  const similarEvents: EventDocument[] = await getSimilarEventsBySlugAction(
+  const similarEvents: SimilarEvent[] = await getSimilarEventsBySlugAction(
     event.slug
   );
 
