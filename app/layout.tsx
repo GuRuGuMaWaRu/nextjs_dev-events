@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Schibsted_Grotesk, Martian_Mono } from "next/font/google";
 
+import { Toaster } from "@/components/ui/sonner";
 import LightRays from "@/components/LightRays";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
@@ -44,6 +45,7 @@ export default function RootLayout({
           />
         </div>
         <main>{children}</main>
+        <Toaster />
       </body>
     </html>
   );
