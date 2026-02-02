@@ -8,7 +8,6 @@ import {
 } from "mongoose";
 
 import { Event } from "@/database/event.model";
-import { BookingDto } from "@/features/Event/types";
 
 // Attributes required to create a Booking.
 export interface BookingAttrs {
@@ -101,7 +100,7 @@ bookingSchema.statics.findByEvent = function (
   return this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
-    .lean<BookingDto[]>()
+    .lean<{ email: string; eventId: Types.ObjectId }[]>()
 };
 
 // Static method to find all bookings for a specific email.

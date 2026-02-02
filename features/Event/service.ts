@@ -7,7 +7,6 @@ import {
   getBookingsByEventAction,
   getSimilarEventsBySlugAction,
 } from "@/features/Event/actions";
-import { BookingDocument } from "@/database";
 
 export const getBookingsByEventService = async (
   eventId: Types.ObjectId
@@ -17,13 +16,7 @@ export const getBookingsByEventService = async (
     return bookingsResult;
   }
 
-  return {
-    ok: true,
-    data: bookingsResult.data?.map((booking) => ({
-      email: booking.email,
-      eventId: booking.eventId,
-    })),
-  };
+  return bookingsResult;
 };
 
 //** Thin wrappers keep the UI consistent and provide a hook for future logic.
@@ -36,6 +29,6 @@ export const getSimilarEventsBySlugService = async (
 export const bookEventService = async (
   email: string,
   eventId: string
-): Promise<AppResult<BookingDocument>> => {
+): Promise<AppResult<BookingDto>> => {
   return bookEventAction(email, eventId);
 };

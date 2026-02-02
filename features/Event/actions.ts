@@ -3,10 +3,10 @@
 import { Types } from "mongoose";
 
 import { connectToDatabase } from "@/lib/mongodb";
-import { Booking, BookingDocument, Event } from "@/database";
+import { Booking, Event } from "@/database";
 import { toAppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
-import { SimilarEventDto } from "@/features/Event/types";
+import { BookingDto, SimilarEventDto } from "@/features/Event/types";
 
 export const getSimilarEventsBySlugAction = async (
   slug: string
@@ -61,7 +61,7 @@ const validateBookingAction = async (
 export const bookEventAction = async (
   email: string,
   eventId: string
-): Promise<AppResult<BookingDocument>> => {
+): Promise<AppResult<BookingDto>> => {
   try {
     await connectToDatabase();
 
@@ -72,7 +72,14 @@ export const bookEventAction = async (
     
     const booking = await Booking.create({ email, eventId });
 
-    return { ok: true, data: booking };
+    return {
+      ok: true,
+      data: {
+        id: booking._id.toString(),
+        email: booking.email,
+        eventId: booking.eventId.toString(),
+      },
+    };
   } catch (error) {
     return toAppError(error, "Failed to book event");
   }
@@ -80,12 +87,18 @@ export const bookEventAction = async (
 
 export const getBookingsByEventAction = async (
   eventId: Types.ObjectId
-): Promise<AppResult<BookingDocument[]>> => {
+): Promise<AppResult<BookingDto[]>> => {
   try {
     await connectToDatabase();
 
     const bookings = await Booking.findByEvent(eventId);
-    return { ok: true, data: bookings };
+    return {
+      ok: true,
+      data: bookings.map((booking) => ({
+        email: booking.email,
+        eventId: booking.eventId.toString(),
+      })),
+    };
   } catch (error) {
     return toAppError(error, "Failed to fetch bookings");
   }
