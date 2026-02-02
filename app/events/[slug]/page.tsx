@@ -5,12 +5,12 @@ import EventDetailItem from "@/features/Event/components/EventDetailItem";
 import EventAgenda from "@/features/Event/components/EventAgenda";
 import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
-import {
-  getBookingsByEventAction,
-  getSimilarEventsBySlugAction,
-} from "@/features/Event/actions";
 import { EventCard } from "@/features/Event/components/EventCard";
-import { SimilarEvent } from "@/features/Event/types";
+import {
+  getBookingsByEventService,
+  getSimilarEventsBySlugService,
+} from "@/features/Event/service";
+import { handleAppError } from "@/lib/app-error-ui";
 
 const EventDetailsPage = async ({
   params,
@@ -41,12 +41,23 @@ const EventDetailsPage = async ({
     return notFound();
   }
 
-  const { data: bookings } = await getBookingsByEventAction(event._id);
-  const bookingCount = bookings?.length ?? 0;
+  const bookingsResult = await getBookingsByEventService(event._id);
+  const bookingCount = bookingsResult.ok
+    ? bookingsResult.data?.length ?? 0
+    : 0;
+  const bookingCountError = bookingsResult.ok
+    ? null
+    : handleAppError(bookingsResult, {
+        fallbackMessage: "Booking count unavailable.",
+      });
 
-  const similarEvents: SimilarEvent[] = await getSimilarEventsBySlugAction(
-    event.slug
-  );
+  const similarEventsResult = await getSimilarEventsBySlugService(event.slug);
+  const similarEventsError = similarEventsResult.ok
+    ? null
+    : handleAppError(similarEventsResult);
+  const similarEvents = similarEventsResult.ok
+    ? similarEventsResult.data ?? []
+    : [];
 
   return (
     <section id="event">
@@ -114,7 +125,9 @@ const EventDetailsPage = async ({
         <aside className="booking">
           <div className="signup-card">
             <h2>Book Your Spot</h2>
-            {bookingCount > 0 ? (
+            {bookingCountError ? (
+              <p className="text-sm">{bookingCountError}</p>
+            ) : bookingCount > 0 ? (
               <p className="text-sm">
                 Join {bookingCount} other people who already booked this event.
               </p>
@@ -122,18 +135,22 @@ const EventDetailsPage = async ({
               <p className="text-sm">Be the first to book your spot.</p>
             )}
 
-            <BookEvent />
+            <BookEvent eventId={event._id} />
           </div>
         </aside>
       </div>
 
       <div className="flex flex-col gap-4 mt-20 w-full">
         <h2>Similar Events</h2>
-        <div className="events">
-          {similarEvents.map((event) => (
-            <EventCard key={event.title} {...event} />
-          ))}
-        </div>
+        {similarEventsError ? (
+          <p className="text-sm">{similarEventsError}</p>
+        ) : (
+          <div className="events">
+            {similarEvents.map((event) => (
+              <EventCard key={event.title} {...event} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

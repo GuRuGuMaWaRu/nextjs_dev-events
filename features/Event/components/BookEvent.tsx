@@ -1,14 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
-const BookEvent = () => {
+import { bookEventService } from "@/features/Event/service";
+import { toastAppError } from "@/lib/app-error-ui";
+
+type BookEventProps = {
+  eventId: string;
+};
+
+const BookEvent = ({ eventId }: BookEventProps) => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, startTransition] = useTransition();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!email) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await bookEventService(email, eventId);
+      if (!result.ok) {
+        toastAppError(result);
+        return;
+      }
+
+      setSubmitted(true);
+      setEmail("");
+    });
   };
 
   return (
@@ -27,8 +48,12 @@ const BookEvent = () => {
               id="email"
             />
           </div>
-          <button type="submit" className="button-submit">
-            Book Now
+          <button
+            type="submit"
+            className="button-submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Booking..." : "Book Now"}
           </button>
         </form>
       )}

@@ -97,7 +97,9 @@ bookingSchema.statics.findByEvent = function (
   this: BookingModel,
   eventId: Types.ObjectId
 ) {
-  return this.find({ eventId }).sort({ createdAt: -1 });
+  return this.find({ eventId })
+    .sort({ createdAt: -1 })
+    .lean<BookingDocument[]>();
 };
 
 // Static method to find all bookings for a specific email.

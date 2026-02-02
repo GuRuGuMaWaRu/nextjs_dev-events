@@ -1,6 +1,8 @@
-import { EventDocument } from "@/database";
+import { BookingDocument, EventDocument } from "@/database";
 
-export type SimilarEvent = Pick<
+export type SimilarEventDto = Pick<
   EventDocument,
   "title" | "image" | "slug" | "location" | "date" | "time"
 >;
+
+export type BookingDto = Pick<BookingDocument, "email" | "eventId">;
