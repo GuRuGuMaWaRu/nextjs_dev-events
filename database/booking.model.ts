@@ -100,7 +100,7 @@ bookingSchema.statics.findByEvent = function (
   return this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
-    .lean<{ email: string; eventId: Types.ObjectId }[]>()
+    .lean<{ email: string; eventId: Types.ObjectId }[]>();
 };
 
 // Static method to find all bookings for a specific email.
