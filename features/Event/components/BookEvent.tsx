@@ -46,6 +46,8 @@ const BookEvent = ({ eventId }: BookEventProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               id="email"
+              required
+              disabled={isSubmitting}
             />
           </div>
           <button
