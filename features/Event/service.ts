@@ -8,7 +8,7 @@ import {
   getSimilarEventsBySlugAction,
 } from "@/features/Event/actions";
 
-//** Thin wrappers keep the UI consistent and provide a hook for future logic.
+/** Thin wrappers keep the UI consistent and provide a hook for future logic. */
 export const getBookingsByEventService = async (
   eventId: Types.ObjectId
 ): Promise<AppResult<BookingDto[]>> => {
