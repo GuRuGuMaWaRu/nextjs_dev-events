@@ -7,6 +7,7 @@ import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
 import { EventCard } from "@/features/Event/components/EventCard";
 import {
+  getEventBySlugService,
   getBookingsByEventService,
   getSimilarEventsBySlugService,
 } from "@/features/Event/service";
@@ -19,24 +20,19 @@ const EventDetailsPage = async ({
 }) => {
   const { slug } = await params;
 
-  const request = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${slug}`
-  );
-
-  if (!request.ok) {
-    if (request.status === 404) {
+  const eventResult = await getEventBySlugService(slug);
+  if (!eventResult.ok) {
+    if (eventResult.code === "NOT_FOUND") {
       return notFound();
     }
 
-    return <div>Error: Failed to fetch event details</div>;
+    const message = handleAppError(eventResult, {
+      fallbackMessage: "Failed to fetch event details",
+    });
+    return <div>Error: {message}</div>;
   }
 
-  const { event, error } = await request.json();
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
+  const event = eventResult.data;
   if (!event) {
     return notFound();
   }

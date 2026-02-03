@@ -6,7 +6,11 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { Booking, Event } from "@/database";
 import { toAppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
-import { BookingDto, SimilarEventDto } from "@/features/Event/types";
+import {
+  BookingDto,
+  EventDetailDto,
+  SimilarEventDto,
+} from "@/features/Event/types";
 
 export const getSimilarEventsBySlugAction = async (
   slug: string
@@ -33,6 +37,34 @@ export const getSimilarEventsBySlugAction = async (
     };
   } catch (error) {
     return toAppError(error, "Failed to get similar events");
+  }
+};
+
+export const getEventBySlugAction = async (
+  slug: string
+): Promise<AppResult<EventDetailDto>> => {
+  const sanitizedSlug = slug?.trim().toLowerCase();
+  if (!sanitizedSlug) {
+    return { ok: false, code: "VALIDATION", message: "Event slug is required" };
+  }
+
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findOne({ slug: sanitizedSlug })
+      .select("-__v")
+      .lean<EventDetailDto>();
+    if (!event) {
+      return {
+        ok: false,
+        code: "NOT_FOUND",
+        message: `Event with slug "${sanitizedSlug}" not found`,
+      };
+    }
+
+    return { ok: true, data: event };
+  } catch (error) {
+    return toAppError(error, "Failed to fetch event");
   }
 };
 

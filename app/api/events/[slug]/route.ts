@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
 
-import { Event } from "@/database";
-import { connectToDatabase } from "@/lib/mongodb";
+import { AppErrorCode } from "@/core/types";
+import { getEventBySlugAction } from "@/features/Event/actions";
+
+const toHttpStatus = (code: AppErrorCode): number => {
+  switch (code) {
+    case "VALIDATION":
+      return 400;
+    case "UNAUTHORIZED":
+      return 401;
+    case "FORBIDDEN":
+      return 403;
+    case "NOT_FOUND":
+      return 404;
+    case "CONFLICT":
+      return 409;
+    case "BUSINESS":
+      return 400;
+    default:
+      return 500;
+  }
+};
 
 export async function GET(
   _request: Request,
@@ -12,30 +31,25 @@ export async function GET(
   }
 ): Promise<NextResponse> {
   try {
-    await connectToDatabase();
     const { slug } = await params;
 
-    if (!slug) {
-      return NextResponse.json(
-        { message: "Event slug is required" },
-        { status: 400 }
-      );
+    const result = await getEventBySlugAction(slug);
+
+    if (!result.ok) {
+      const status = toHttpStatus(result.code);
+      const message = result.message ?? "Event fetching failed";
+      return NextResponse.json({ message, error: message }, { status });
     }
-
-    const sanitizedSlug = slug.trim().toLowerCase();
-
-    const event = await Event.findOne({ slug: sanitizedSlug })
-      .select("-__v")
-      .lean();
-    if (!event) {
+    
+    if (!result.data) {
       return NextResponse.json(
-        { message: `Event with slug "${sanitizedSlug}" not found` },
+        { message: "Event not found", error: "Event not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json(
-      { message: "Event fetched successfully", event },
+      { message: "Event fetched successfully", event: result.data },
       { status: 200 }
     );
   } catch (error) {

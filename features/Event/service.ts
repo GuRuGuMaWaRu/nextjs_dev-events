@@ -1,9 +1,14 @@
 import { Types } from "mongoose";
 
 import { AppResult } from "@/core/types";
-import { BookingDto, SimilarEventDto } from "@/features/Event/types";
+import {
+  BookingDto,
+  EventDetailDto,
+  SimilarEventDto,
+} from "@/features/Event/types";
 import {
   bookEventAction,
+  getEventBySlugAction,
   getBookingsByEventAction,
   getSimilarEventsBySlugAction,
 } from "@/features/Event/actions";
@@ -19,6 +24,12 @@ export const getSimilarEventsBySlugService = async (
   slug: string
 ): Promise<AppResult<SimilarEventDto[]>> => {
   return getSimilarEventsBySlugAction(slug);
+};
+
+export const getEventBySlugService = async (
+  slug: string
+): Promise<AppResult<EventDetailDto>> => {
+  return getEventBySlugAction(slug);
 };
 
 export const bookEventService = async (
