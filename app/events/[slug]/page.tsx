@@ -10,7 +10,7 @@ import {
   getEventBySlugService,
   getBookingsByEventService,
   getSimilarEventsBySlugService,
-} from "@/features/Event/service";
+} from "@/features/Event/service.server";
 import { handleAppError } from "@/lib/app-error-ui";
 
 const EventDetailsPage = async ({

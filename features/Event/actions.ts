@@ -52,8 +52,10 @@ export const getEventBySlugAction = async (
     await connectToDatabase();
 
     const event = await Event.findOne({ slug: sanitizedSlug })
-      .select("-__v")
-      .lean<EventDetailDto>();
+      .select(
+        "title slug description overview image venue location date time mode audience agenda organizer tags"
+      )
+      .lean<EventDetailDto<Types.ObjectId>>();
     if (!event) {
       return {
         ok: false,
@@ -62,7 +64,13 @@ export const getEventBySlugAction = async (
       };
     }
 
-    return { ok: true, data: event };
+    return {
+      ok: true,
+      data: {
+        ...event,
+        _id: event._id.toString(),
+      },
+    };
   } catch (error) {
     return toAppError(error, "Failed to fetch event");
   }
@@ -118,7 +126,7 @@ export const bookEventAction = async (
 };
 
 export const getBookingsByEventAction = async (
-  eventId: Types.ObjectId
+  eventId: string
 ): Promise<AppResult<BookingDto[]>> => {
   try {
     await connectToDatabase();

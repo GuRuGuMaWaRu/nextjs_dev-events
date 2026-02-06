@@ -22,9 +22,7 @@ export interface BookingDocument extends Document, BookingAttrs {
 }
 
 export interface BookingModel extends Model<BookingDocument> {
-  findByEvent(eventId: Types.ObjectId): Promise<BookingDocument[]>;
-  findByEmail(email: string): Promise<BookingDocument[]>;
-  countByEvent(eventId: Types.ObjectId): Promise<number>;
+  findByEvent(eventId: string): Promise<BookingDocument[]>;
 }
 
 const bookingSchema = new Schema<BookingDocument, BookingModel>(
@@ -51,14 +49,6 @@ const bookingSchema = new Schema<BookingDocument, BookingModel>(
   },
   {
     timestamps: true, // automatically manages createdAt and updatedAt
-    toJSON: {
-      transform: (_doc, ret: Record<string, unknown>) => {
-        ret.id = ret._id?.toString();
-        delete ret._id;
-        delete ret.__v;
-        return ret;
-      },
-    },
   }
 );
 
@@ -93,32 +83,19 @@ bookingSchema.pre("save", async function (this: BookingDocument) {
 });
 
 // Static method to find all bookings for a specific event.
-bookingSchema.statics.findByEvent = function (
+bookingSchema.statics.findByEvent = async function (
   this: BookingModel,
-  eventId: Types.ObjectId
-) {
-  return this.find({ eventId })
+  eventId: string
+): Promise<{ email: string; eventId: string }[]> {
+  const bookings = await this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
-    .lean<{ email: string; eventId: Types.ObjectId }[]>();
-};
+    .lean<{ email: string; eventId: Types.ObjectId }[]>()
 
-// Static method to find all bookings for a specific email.
-bookingSchema.statics.findByEmail = function (
-  this: BookingModel,
-  email: string
-) {
-  return this.find({ email: email.toLowerCase() })
-    .populate("eventId")
-    .sort({ createdAt: -1 });
-};
-
-// Static method to count bookings for a specific event.
-bookingSchema.statics.countByEvent = function (
-  this: BookingModel,
-  eventId: Types.ObjectId
-) {
-  return this.countDocuments({ eventId });
+    return bookings.map((booking) => ({
+      email: booking.email,
+      eventId: booking.eventId.toString(),
+    }));
 };
 
 export const Booking: BookingModel =

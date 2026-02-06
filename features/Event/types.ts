@@ -5,7 +5,7 @@ export type SimilarEventDto = Pick<
   "title" | "image" | "slug" | "location" | "date" | "time"
 >;
 
-export type EventDetailDto = Pick<
+export type EventDetailDto<id = string> = Pick<
   EventDocument,
   | "title"
   | "slug"
@@ -22,7 +22,7 @@ export type EventDetailDto = Pick<
   | "organizer"
   | "tags"
 > & {
-  _id: EventDocument["_id"];
+  _id: id;
 };
 
 export type BookingDto = {
