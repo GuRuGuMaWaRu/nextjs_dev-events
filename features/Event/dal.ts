@@ -4,7 +4,12 @@ import { AppResult } from "@/core/types";
 import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
 import { CreateEventDto, EventDetailDto } from "@/features/Event/types";
-import { getEventBySlugAction, getEventsAction, createEventAction } from "@/features/Event/actions";
+import {
+  createEventAction,
+  deleteEventAction,
+  getEventBySlugAction,
+  getEventsAction,
+} from "@/features/Event/actions";
 
 export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
   'use cache';
@@ -32,4 +37,19 @@ export const getEventBySlugDAL = async (
   cacheTag(`event-details-${slug}`);
   
   return getEventBySlugAction(slug);
+};
+
+export const deleteEventDAL = async (
+  eventId: string
+): Promise<AppResult<EventDetailDto>> => {
+  const deletedEvent = await deleteEventAction(eventId);
+
+  if (deletedEvent.ok) {
+    revalidateTag("events", "force");
+    if (deletedEvent.data?.slug) {
+      revalidateTag(`event-details-${deletedEvent.data.slug}`, "force");
+    }
+  }
+
+  return deletedEvent;
 };

@@ -2,7 +2,12 @@ import "server-only";
 
 import { AppResult } from "@/core/types";
 import { BookingDto, CreateEventDto, EventDetailDto, SimilarEventDto } from "@/features/Event/types";
-import { createEventDAL, getEventsDAL, getEventBySlugDAL } from "@/features/Event/dal";
+import {
+  createEventDAL,
+  deleteEventDAL,
+  getEventBySlugDAL,
+  getEventsDAL,
+} from "@/features/Event/dal";
 import {
   getBookingsByEventAction,
   getSimilarEventsBySlugAction,
@@ -33,4 +38,10 @@ export const getEventBySlugService = async (
   slug: string
 ): Promise<AppResult<EventDetailDto>> => {
   return getEventBySlugDAL(slug);
+};
+
+export const deleteEventService = async (
+  eventId: string
+): Promise<AppResult<EventDetailDto>> => {
+  return deleteEventDAL(eventId);
 };

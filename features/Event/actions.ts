@@ -13,7 +13,7 @@ import {
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
-import { toEventDetailDto } from "@/features/Event/helpers";
+import { extractPublicIdFromUrl, toEventDetailDto } from "@/features/Event/helpers";
 
 export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> => {
   try {
@@ -64,6 +64,73 @@ export const createEventAction = async (event: CreateEventDto): Promise<AppResul
     };
   } catch (error) {
     return toAppError(error, "Failed to create event");
+  }
+};
+
+export const deleteEventAction = async (
+  eventId: string
+): Promise<AppResult<EventDetailDto>> => {
+  if (!eventId?.trim()) {
+    return { ok: false, code: "VALIDATION", message: "Event ID is required" };
+  }
+
+  try {
+    await connectToDatabase();
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return { ok: false, code: "NOT_FOUND", message: "Event not found" };
+    }
+
+    if (event.image) {
+      const publicId = extractPublicIdFromUrl(event.image);
+
+      if (publicId) {
+        try {
+          const result = await new Promise<{ result: string }>(
+            (resolve, reject) => {
+              cloudinary.uploader.destroy(
+                publicId,
+                {
+                  invalidate: true,
+                  resource_type: "image",
+                },
+                (error, result) => {
+                  if (error) {
+                    reject(error);
+                  } else {
+                    resolve(result as { result: string });
+                  }
+                }
+              );
+            }
+          );
+
+          if (result && result.result === "ok") {
+            console.log(`Successfully deleted image from Cloudinary: ${publicId}`);
+          } else if (result && result.result === "not found") {
+            console.warn(
+              `Image not found in Cloudinary: ${publicId}. URL was: ${event.image}`
+            );
+          } else {
+            console.warn(`Unexpected result from Cloudinary destroy:`, result);
+          }
+        } catch (cloudinaryError) {
+          console.error(
+            `Error deleting image from Cloudinary (public_id: ${publicId}):`,
+            cloudinaryError
+          );
+        }
+      } else {
+        console.warn(`Could not extract public_id from URL: ${event.image}`);
+      }
+    }
+
+    await Event.findByIdAndDelete(eventId);
+
+    return { ok: true, data: toEventDetailDto(event) };
+  } catch (error) {
+    return toAppError(error, "Failed to delete event");
   }
 };
 
