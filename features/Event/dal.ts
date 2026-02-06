@@ -1,7 +1,7 @@
 import "server-only";
 
 import { AppResult } from "@/core/types";
-import { cacheLife, cacheTag, revalidateTag } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag, revalidatePath } from "next/cache";
 
 import { CreateEventDto, EventDetailDto } from "@/features/Event/types";
 import {
@@ -13,7 +13,7 @@ import {
 
 export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
   'use cache';
-  cacheLife('hours');
+  cacheLife('minutes');
   cacheTag('events');
   
   return getEventsAction();
@@ -24,6 +24,7 @@ export const createEventDAL = async (event: CreateEventDto): Promise<AppResult<E
 
   if (newEvent.ok) {
     revalidateTag('events', 'force');
+    revalidatePath("/");
   }
 
   return newEvent;
@@ -46,6 +47,8 @@ export const deleteEventDAL = async (
 
   if (deletedEvent.ok) {
     revalidateTag("events", "force");
+    revalidatePath("/");
+
     if (deletedEvent.data?.slug) {
       revalidateTag(`event-details-${deletedEvent.data.slug}`, "force");
     }
