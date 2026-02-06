@@ -8,6 +8,7 @@ import { EventDetailDto } from "@/features/Event/types";
 const Page = async () => {
   const eventsData = await getEventsService();
 
+  console.log(eventsData);
   const eventsError = eventsData.ok
     ? null
     : handleAppError(eventsData, {

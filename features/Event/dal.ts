@@ -1,10 +1,10 @@
 import "server-only";
 
 import { AppResult } from "@/core/types";
-import { cacheLife, cacheTag } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
-import { EventDetailDto } from "@/features/Event/types";
-import { getEventBySlugAction, getEventsAction } from "@/features/Event/actions";
+import { CreateEventDto, EventDetailDto } from "@/features/Event/types";
+import { getEventBySlugAction, getEventsAction, createEventAction } from "@/features/Event/actions";
 
 export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
   'use cache';
@@ -12,6 +12,16 @@ export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
   cacheTag('events');
   
   return getEventsAction();
+};
+
+export const createEventDAL = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
+  const newEvent = await createEventAction(event);
+
+  if (newEvent.ok) {
+    revalidateTag('events', 'force');
+  }
+
+  return newEvent;
 };
 
 export const getEventBySlugDAL = async (

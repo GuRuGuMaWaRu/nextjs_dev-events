@@ -4,7 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { Event } from "@/database";
 import { connectToDatabase } from "@/lib/mongodb";
 import { toHttpStatus } from "@/lib/http-status";
-import { getEventsService } from "@/features/Event/service.server";
+import { createEventService, getEventsService } from "@/features/Event/service.server";
 
 /**
  * Extracts the public_id from a Cloudinary URL.
@@ -36,8 +36,6 @@ function extractPublicIdFromUrl(url: string): string | null {
 
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase();
-
     const formData = await request.formData();
 
     let event;
@@ -83,36 +81,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            resource_type: "image",
-            folder: "dev-events",
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          }
-        )
-        .end(buffer);
-    });
-    event.image = (uploadResult as { secure_url: string }).secure_url;
-
-    const createdEvent = await Event.create({
-      ...event,
-      tags: parsedTags,
+    const createdEvent = await createEventService({
+      title: event.title as string,
+      description: event.description as string,
+      overview: event.overview as string,
+      image: file,
+      venue: event.venue as string,
+      location: event.location as string,
+      date: event.date as string,
+      time: event.time as string,
+      mode: event.mode as string,
+      audience: event.audience as string,
       agenda: parsedAgenda,
+      organizer: event.organizer as string,
+      tags: parsedTags,
     });
+
+    if (!createdEvent.ok) {
+      return NextResponse.json(
+        { message: createdEvent.message },
+        { status: toHttpStatus(createdEvent.code ?? 500) }
+      );
+    }
 
     return NextResponse.json(
-      { message: "Event created successfully", event: createdEvent },
+      { message: "Event created successfully", event: createdEvent.data! },
       { status: 201 }
     );
   } catch (error) {

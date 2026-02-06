@@ -1,8 +1,8 @@
 import "server-only";
 
 import { AppResult } from "@/core/types";
-import { BookingDto, EventDetailDto, SimilarEventDto } from "@/features/Event/types";
-import { getEventsDAL, getEventBySlugDAL } from "@/features/Event/dal";
+import { BookingDto, CreateEventDto, EventDetailDto, SimilarEventDto } from "@/features/Event/types";
+import { createEventDAL, getEventsDAL, getEventBySlugDAL } from "@/features/Event/dal";
 import {
   getBookingsByEventAction,
   getSimilarEventsBySlugAction,
@@ -11,6 +11,10 @@ import {
 /** Server-only wrappers keep UI usage consistent and enable caching. */
 export const getEventsService = async (): Promise<AppResult<EventDetailDto[]>> => {
   return getEventsDAL();
+};
+
+export const createEventService = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
+  return createEventDAL(event);
 };
 
 export const getBookingsByEventService = async (

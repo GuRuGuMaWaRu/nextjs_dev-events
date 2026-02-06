@@ -1,6 +1,7 @@
 "use server";
 
 import { Types } from "mongoose";
+import { v2 as cloudinary } from "cloudinary";
 
 import { connectToDatabase } from "@/lib/mongodb";
 import { Booking, Event, EventDocument } from "@/database";
@@ -8,9 +9,11 @@ import { toAppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
 import {
   BookingDto,
+  CreateEventDto,
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
+import { toEventDetailDto } from "@/features/Event/helpers";
 
 export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> => {
   try {
@@ -18,12 +21,49 @@ export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> =>
 
     const events = await Event.find().sort({ createdAt: -1 }).select("title slug description overview image venue location date time mode audience agenda organizer tags").lean<EventDocument[]>();
 
-    return { ok: true, data: events.map((event) => ({
-      ...event,
-      _id: event._id.toString(),
-    }))};
+    return { ok: true, data: events.map((event) => toEventDetailDto(event)) };
   } catch (error) {
     return toAppError(error, "Failed to get events");
+  }
+};
+
+export const createEventAction = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
+  try {
+    await connectToDatabase();
+
+    const arrayBuffer = await event.image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            resource_type: "image",
+            folder: "dev-events",
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        )
+        .end(buffer);
+    });
+    const imageUrl = (uploadResult as { secure_url: string }).secure_url;
+
+    const createdEvent = await Event.create({
+      ...event,
+      image: imageUrl,
+    });
+
+    return {
+      ok: true,
+      data: toEventDetailDto(createdEvent),
+    };
+  } catch (error) {
+    return toAppError(error, "Failed to create event");
   }
 };
 
@@ -79,13 +119,7 @@ export const getEventBySlugAction = async (
       };
     }
 
-    return {
-      ok: true,
-      data: {
-        ...event,
-        _id: event._id.toString(),
-      },
-    };
+    return { ok: true, data: toEventDetailDto(event) };
   } catch (error) {
     return toAppError(error, "Failed to fetch event");
   }
