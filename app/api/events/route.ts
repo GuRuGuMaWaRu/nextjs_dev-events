@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 
-import { connectToDatabase } from "@/lib/mongodb";
 import { Event } from "@/database";
+import { connectToDatabase } from "@/lib/mongodb";
+import { toHttpStatus } from "@/lib/http-status";
+import { getEventsDAL } from "@/features/Event/dal";
 
 /**
  * Extracts the public_id from a Cloudinary URL.
@@ -127,13 +129,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    await connectToDatabase();
+    const result = await getEventsDAL();
 
-    const events = await Event.find().sort({ createdAt: -1 });
-    return NextResponse.json(
-      { message: "Events fetched successfully", events, total: events.length },
-      { status: 200 }
-    );
+    if (!result.ok) {
+      const status = toHttpStatus(result.code);
+      const message = result.message ?? "Events fetching failed";
+      return NextResponse.json({ message, error: message }, { status });
+    }
+
+    return NextResponse.json({ message: 'Events fetched successfully', events: result.data }, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -4,7 +4,15 @@ import { AppResult } from "@/core/types";
 import { cacheLife, cacheTag } from "next/cache";
 
 import { EventDetailDto } from "@/features/Event/types";
-import { getEventBySlugAction } from "@/features/Event/actions";
+import { getEventBySlugAction, getEventsAction } from "@/features/Event/actions";
+
+export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('events');
+  
+  return getEventsAction();
+};
 
 export const getEventBySlugDAL = async (
   slug: string

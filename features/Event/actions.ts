@@ -3,7 +3,7 @@
 import { Types } from "mongoose";
 
 import { connectToDatabase } from "@/lib/mongodb";
-import { Booking, Event } from "@/database";
+import { Booking, Event, EventDocument } from "@/database";
 import { toAppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
 import {
@@ -11,6 +11,21 @@ import {
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
+
+export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> => {
+  try {
+    await connectToDatabase();
+
+    const events = await Event.find().sort({ createdAt: -1 }).lean<EventDocument[]>();
+
+    return { ok: true, data: events.map((event) => ({
+      ...event,
+      _id: event._id.toString(),
+    }))};
+  } catch (error) {
+    return toAppError(error, "Failed to get events");
+  }
+};
 
 export const getSimilarEventsBySlugAction = async (
   slug: string

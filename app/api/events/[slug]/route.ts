@@ -1,26 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { AppErrorCode } from "@/core/types";
-import { getEventBySlugAction } from "@/features/Event/actions";
+import { toHttpStatus } from "@/lib/http-status";
+import { getEventBySlugDAL } from "@/features/Event/dal";
 
-const toHttpStatus = (code: AppErrorCode): number => {
-  switch (code) {
-    case "VALIDATION":
-      return 400;
-    case "UNAUTHORIZED":
-      return 401;
-    case "FORBIDDEN":
-      return 403;
-    case "NOT_FOUND":
-      return 404;
-    case "CONFLICT":
-      return 409;
-    case "BUSINESS":
-      return 400;
-    default:
-      return 500;
-  }
-};
 
 export async function GET(
   _request: Request,
@@ -33,7 +15,7 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    const result = await getEventBySlugAction(slug);
+    const result = await getEventBySlugDAL(slug);
 
     if (!result.ok) {
       const status = toHttpStatus(result.code);
