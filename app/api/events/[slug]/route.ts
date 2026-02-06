@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { toHttpStatus } from "@/lib/http-status";
-import { getEventBySlugDAL } from "@/features/Event/dal";
-
+import { getEventBySlugService } from "@/features/Event/service.server";
 
 export async function GET(
   _request: Request,
@@ -15,7 +14,7 @@ export async function GET(
   try {
     const { slug } = await params;
 
-    const result = await getEventBySlugDAL(slug);
+    const result = await getEventBySlugService(slug);
 
     if (!result.ok) {
       const status = toHttpStatus(result.code);

@@ -4,7 +4,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { Event } from "@/database";
 import { connectToDatabase } from "@/lib/mongodb";
 import { toHttpStatus } from "@/lib/http-status";
-import { getEventsDAL } from "@/features/Event/dal";
+import { getEventsService } from "@/features/Event/service.server";
 
 /**
  * Extracts the public_id from a Cloudinary URL.
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const result = await getEventsDAL();
+    const result = await getEventsService();
 
     if (!result.ok) {
       const status = toHttpStatus(result.code);
