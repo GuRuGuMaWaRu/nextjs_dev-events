@@ -8,6 +8,7 @@ import {
 } from "mongoose";
 
 import { Event } from "@/database/event.model";
+import { BookingDto } from "@/features/Event/types";
 
 // Attributes required to create a Booking.
 export interface BookingAttrs {
@@ -22,8 +23,9 @@ export interface BookingDocument extends Document, BookingAttrs {
 }
 
 export interface BookingModel extends Model<BookingDocument> {
-  findByEvent(eventId: string): Promise<BookingDocument[]>;
+  findByEvent(eventId: string): Promise<BookingDto[]>;
 }
+
 
 const bookingSchema = new Schema<BookingDocument, BookingModel>(
   {
@@ -86,7 +88,7 @@ bookingSchema.pre("save", async function (this: BookingDocument) {
 bookingSchema.statics.findByEvent = async function (
   this: BookingModel,
   eventId: string
-): Promise<{ email: string; eventId: string }[]> {
+): Promise<BookingDto[]> {
   const bookings = await this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
