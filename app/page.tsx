@@ -1,4 +1,5 @@
 
+import { handleAppError } from "@/lib/app-error-ui";
 import { ExploreBtn } from "@/components/ExploreBtn";
 import { EventCard } from "@/features/Event/components/EventCard";
 import { getEventsService } from "@/features/Event/service.server";
@@ -6,6 +7,12 @@ import { EventDetailDto } from "@/features/Event/types";
 
 const Page = async () => {
   const eventsData = await getEventsService();
+
+  const eventsError = eventsData.ok
+    ? null
+    : handleAppError(eventsData, {
+        fallbackMessage: "Failed to load events.",
+      });
 
   return (
     <section>
@@ -21,6 +28,8 @@ const Page = async () => {
       <div id="events" className="mt-20 space-y-7">
         <h2 className="text-center text-2xl font-bold">Upcoming Events</h2>
         <ul className="events list-none">
+          {eventsError && <div>Error: {eventsError}</div>}
+
           {eventsData.ok && eventsData.data && eventsData.data.length === 0 && <div>No events found</div>}
           
           {eventsData.ok && eventsData.data && eventsData.data.map((event: EventDetailDto) => (
