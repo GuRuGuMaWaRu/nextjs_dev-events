@@ -27,17 +27,19 @@ const Page = async () => {
 
       <div id="events" className="mt-20 space-y-7">
         <h2 className="text-center text-2xl font-bold">Upcoming Events</h2>
-        <ul className="events list-none">
           {eventsError && <div>Error: {eventsError}</div>}
 
           {eventsData.ok && eventsData.data && eventsData.data.length === 0 && <div>No events found</div>}
-          
-          {eventsData.ok && eventsData.data && eventsData.data.map((event: EventDetailDto) => (
-            <li key={event._id}>
-              <EventCard {...event} />
-            </li>
-          ))}
-        </ul>
+
+          {eventsData.ok && eventsData.data && (
+            <ul className="events list-none">
+              {eventsData.data.map((event: EventDetailDto) => (
+                <li key={event._id}>
+                  <EventCard {...event} />
+                </li>
+              ))}
+            </ul>
+          )}
       </div>
     </section>
   );
