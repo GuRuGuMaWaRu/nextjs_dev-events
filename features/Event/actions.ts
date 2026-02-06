@@ -16,7 +16,7 @@ export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> =>
   try {
     await connectToDatabase();
 
-    const events = await Event.find().sort({ createdAt: -1 }).lean<EventDocument[]>();
+    const events = await Event.find().sort({ createdAt: -1 }).select("title slug description overview image venue location date time mode audience agenda organizer tags").lean<EventDocument[]>();
 
     return { ok: true, data: events.map((event) => ({
       ...event,
