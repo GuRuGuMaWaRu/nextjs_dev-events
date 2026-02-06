@@ -91,12 +91,12 @@ bookingSchema.statics.findByEvent = async function (
   const bookings = await this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
-    .lean<{ email: string; eventId: Types.ObjectId }[]>()
+    .lean<{ email: string; eventId: Types.ObjectId }[]>();
 
-    return bookings.map((booking) => ({
-      email: booking.email,
-      eventId: booking.eventId.toString(),
-    }));
+  return bookings.map((booking) => ({
+    email: booking.email,
+    eventId: booking.eventId.toString(),
+  }));
 };
 
 export const Booking: BookingModel =
