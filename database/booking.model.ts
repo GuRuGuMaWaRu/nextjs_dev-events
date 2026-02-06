@@ -33,7 +33,6 @@ const bookingSchema = new Schema<BookingDocument, BookingModel>(
       type: Schema.Types.ObjectId,
       ref: "Event",
       required: true,
-      index: true, // index for faster event-based lookups
     },
     email: {
       type: String,
