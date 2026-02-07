@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       console.error(error);
       return NextResponse.json(
         { message: "Invalid form data" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { message: "Image is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!tagsRaw || !agendaRaw) {
       return NextResponse.json(
         { message: "Tags and agenda are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       console.error(error);
       return NextResponse.json(
         { message: "Invalid tags or agenda format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
     if (!createdEvent.ok) {
       return NextResponse.json(
         { message: createdEvent.message },
-        { status: toHttpStatus(createdEvent.code ?? 500) }
+        { status: toHttpStatus(createdEvent.code) },
       );
     }
 
     return NextResponse.json(
       { message: "Event created successfully", event: createdEvent.data! },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error(error);
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         message: "Event creation failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -102,7 +102,10 @@ export async function GET() {
       return NextResponse.json({ message, error: message }, { status });
     }
 
-    return NextResponse.json({ message: 'Events fetched successfully', events: result.data }, { status: 200 });
+    return NextResponse.json(
+      { message: "Events fetched successfully", events: result.data },
+      { status: 200 },
+    );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -110,7 +113,7 @@ export async function GET() {
         message: "Events fetching failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -123,7 +126,7 @@ export async function DELETE(request: NextRequest) {
     if (!eventId) {
       return NextResponse.json(
         { message: "Event ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -131,13 +134,13 @@ export async function DELETE(request: NextRequest) {
     if (!deletedEvent.ok) {
       return NextResponse.json(
         { message: deletedEvent.message },
-        { status: toHttpStatus(deletedEvent.code ?? "BUSINESS") }
+        { status: toHttpStatus(deletedEvent.code) },
       );
     }
 
     return NextResponse.json(
       { message: "Event deleted successfully", event: deletedEvent.data },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error(error);
@@ -146,7 +149,7 @@ export async function DELETE(request: NextRequest) {
         message: "Event deletion failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
