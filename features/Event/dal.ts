@@ -23,8 +23,7 @@ export const createEventDAL = async (event: CreateEventDto): Promise<AppResult<E
   const newEvent = await createEventAction(event);
 
   if (newEvent.ok) {
-    revalidateTag('events', 'force');
-    revalidatePath("/");
+    revalidateTag('events', 'max');
   }
 
   return newEvent;
@@ -46,11 +45,10 @@ export const deleteEventDAL = async (
   const deletedEvent = await deleteEventAction(eventId);
 
   if (deletedEvent.ok) {
-    revalidateTag("events", "force");
-    revalidatePath("/");
+    revalidateTag('events', 'max');
 
     if (deletedEvent.data?.slug) {
-      revalidateTag(`event-details-${deletedEvent.data.slug}`, "force");
+      revalidateTag(`event-details-${deletedEvent.data.slug}`, 'max');
     }
   }
 
