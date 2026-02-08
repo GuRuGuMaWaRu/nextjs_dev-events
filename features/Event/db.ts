@@ -172,31 +172,13 @@ export const getEventBySlugDB = async (
   return event;
 };
 
-const validateBookingDB = async (
-  email: string,
-  eventId: string,
-): Promise<void> => {
-  await connectToDatabase();
-
-  const booking = await Booking.findOne({ email, eventId });
-
-  if (booking) {
-    throw new AppError("CONFLICT", "You have already booked this event.", {
-      status: 409,
-    });
-  }
-};
-
 export const bookEventDB = async (
   email: string,
   eventId: string,
 ): Promise<BookingDocument> => {
   await connectToDatabase();
 
-  await validateBookingDB(email, eventId);
-
   const booking = await Booking.create({ email, eventId });
-
   return booking;
 };
 

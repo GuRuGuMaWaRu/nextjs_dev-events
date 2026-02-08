@@ -129,8 +129,15 @@ export const bookEventDAL = async (
 
     return toBookingDto(booking);
   } catch (error) {
-    if (error instanceof AppError) {
-      throw error;
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as { code: number }).code === 11000
+    ) {
+      throw new AppError("CONFLICT", "You have already booked this event.", {
+        status: 409,
+        cause: error,
+      });
     }
 
     throw new AppError("DB", "Failed to book event", { status: 500 });
