@@ -1,6 +1,5 @@
 import "server-only";
 
-import { AppResult } from "@/core/types";
 import {
   BookingDto,
   CreateEventDto,
