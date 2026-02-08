@@ -1,10 +1,12 @@
 import { Types } from "mongoose";
 
-import { EventDocument } from "@/database";
-import { EventDetailDto } from "@/features/Event/types";
+import { BookingDocument, EventDocument } from "@/database";
+import { BookingDto, EventDetailDto } from "@/features/Event/types";
 
 export const toEventDetailDto = (
-  event: EventDocument | (EventDetailDto<Types.ObjectId> & { _id: Types.ObjectId })
+  event:
+    | EventDocument
+    | (EventDetailDto<Types.ObjectId> & { _id: Types.ObjectId }),
 ): EventDetailDto => {
   const eventObject =
     typeof (event as EventDocument).toObject === "function"
@@ -12,8 +14,33 @@ export const toEventDetailDto = (
       : event;
 
   return {
-    ...eventObject,
-    _id: eventObject._id.toString(),
+    title: eventObject.title,
+    slug: eventObject.slug,
+    description: eventObject.description,
+    overview: eventObject.overview,
+    image: eventObject.image,
+    venue: eventObject.venue,
+    location: eventObject.location,
+    date: eventObject.date,
+    time: eventObject.time,
+    id: eventObject._id.toString(),
+    mode: eventObject.mode,
+    audience: eventObject.audience,
+    agenda: eventObject.agenda,
+    organizer: eventObject.organizer,
+    tags: eventObject.tags,
+  };
+};
+
+export const toBookingDto = (booking: BookingDocument): BookingDto => {
+  const bookingObject =
+    typeof (booking as BookingDocument).toObject === "function"
+      ? (booking as BookingDocument).toObject()
+      : booking;
+
+  return {
+    email: bookingObject.email,
+    eventId: bookingObject.eventId.toString(),
   };
 };
 

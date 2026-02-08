@@ -10,12 +10,31 @@ const DEFAULT_ERROR_MESSAGES: Record<AppErrorCode, string> = {
   BUSINESS: "We could not complete that action.",
   INTERNAL: "Something went wrong. Please try again.",
   CONFLICT: "This action conflicts with an existing record.",
+  DB: "A database error occurred. Please try again later.",
+  UNKNOWN: "An unknown error occurred. Please try again later.",
 };
+
+export class AppError extends Error {
+  public readonly code: AppErrorCode;
+  public readonly status?: number;
+  public readonly cause?: unknown;
+
+  public constructor(
+    code: AppErrorCode,
+    message: string,
+    options?: { status?: number; cause?: unknown },
+  ) {
+    super(message);
+    this.code = code;
+    this.status = options?.status;
+    this.cause = options?.cause;
+  }
+}
 
 export const toAppError = (
   error: unknown,
   message: string,
-  code: AppErrorCode = "INTERNAL"
+  code: AppErrorCode = "INTERNAL",
 ): AppFailure => {
   console.error(error);
   return { ok: false, code, message };
@@ -23,11 +42,9 @@ export const toAppError = (
 
 export const getAppErrorMessage = (
   failure: AppFailure,
-  fallbackMessage = DEFAULT_ERROR_MESSAGES.INTERNAL
+  fallbackMessage = DEFAULT_ERROR_MESSAGES.INTERNAL,
 ): string => {
   return (
-    failure.message ??
-    DEFAULT_ERROR_MESSAGES[failure.code] ??
-    fallbackMessage
+    failure.message ?? DEFAULT_ERROR_MESSAGES[failure.code] ?? fallbackMessage
   );
 };

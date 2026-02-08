@@ -1,17 +1,15 @@
-
 import { handleAppError } from "@/lib/app-error-ui";
 import { ExploreBtn } from "@/components/ExploreBtn";
 import { EventCard } from "@/features/Event/components/EventCard";
-import { getEventsService } from "@/features/Event/service.server";
 import { EventDetailDto } from "@/features/Event/types";
+import { getEventsAction } from "@/features/Event/actions";
 
 const Page = async () => {
-  const eventsData = await getEventsService();
+  const eventsResult = await getEventsAction();
 
-  console.log(eventsData);
-  const eventsError = eventsData.ok
+  const eventsError = eventsResult.ok
     ? null
-    : handleAppError(eventsData, {
+    : handleAppError(eventsResult, {
         fallbackMessage: "Failed to load events.",
       });
 
@@ -28,19 +26,21 @@ const Page = async () => {
 
       <div id="events" className="mt-20 space-y-7">
         <h2 className="text-center text-2xl font-bold">Upcoming Events</h2>
-          {eventsError && <div>Error: {eventsError}</div>}
+        {eventsError && <div>Error: {eventsError}</div>}
 
-          {eventsData.ok && eventsData.data && eventsData.data.length === 0 && <div>No events found</div>}
+        {eventsResult.ok &&
+          eventsResult.data &&
+          eventsResult.data.length === 0 && <div>No events found</div>}
 
-          {eventsData.ok && eventsData.data && (
-            <ul className="events list-none">
-              {eventsData.data.map((event: EventDetailDto) => (
-                <li key={event._id}>
-                  <EventCard {...event} />
-                </li>
-              ))}
-            </ul>
-          )}
+        {eventsResult.ok && eventsResult.data && (
+          <ul className="events list-none">
+            {eventsResult.data.map((event: EventDetailDto) => (
+              <li key={event.id}>
+                <EventCard {...event} />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </section>
   );

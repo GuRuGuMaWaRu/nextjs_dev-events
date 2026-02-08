@@ -1,56 +1,163 @@
 import "server-only";
 
-import { AppResult } from "@/core/types";
-import { cacheLife, cacheTag, revalidateTag, revalidatePath } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 
-import { CreateEventDto, EventDetailDto } from "@/features/Event/types";
+import { AppError } from "@/core/app-error";
 import {
-  createEventAction,
-  deleteEventAction,
-  getEventBySlugAction,
-  getEventsAction,
-} from "@/features/Event/actions";
+  CreateEventDto,
+  EventDetailDto,
+  SimilarEventDto,
+  BookingDto,
+} from "@/features/Event/types";
+import {
+  getEventsDB,
+  createEventDB,
+  deleteEventDB,
+  getEventBySlugDB,
+  getSimilarEventsBySlugDB,
+  getBookingsByEventDB,
+  bookEventDB,
+} from "@/features/Event/db";
+import { toBookingDto, toEventDetailDto } from "@/features/Event/helpers";
 
-export const getEventsDAL = async (): Promise<AppResult<EventDetailDto[]>> => {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag('events');
-  
-  return getEventsAction();
-};
+export const getEventsDAL = async (): Promise<EventDetailDto[]> => {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("events");
 
-export const createEventDAL = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
-  const newEvent = await createEventAction(event);
+  try {
+    const events = await getEventsDB();
 
-  if (newEvent.ok) {
-    revalidateTag('events', 'max');
+    return events?.map((event) => toEventDetailDto(event)) ?? [];
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to get events", { status: 500 });
   }
-
-  return newEvent;
 };
 
-export const getEventBySlugDAL = async (
-  slug: string
-): Promise<AppResult<EventDetailDto>> => {
-  'use cache';
-  cacheLife('minutes');
-  cacheTag(`event-details-${slug}`);
-  
-  return getEventBySlugAction(slug);
+export const createEventDAL = async (
+  event: CreateEventDto,
+): Promise<EventDetailDto> => {
+  try {
+    const newEvent = await createEventDB(event);
+
+    revalidateTag("events", "max");
+
+    return toEventDetailDto(newEvent);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to create event", { status: 500 });
+  }
 };
 
 export const deleteEventDAL = async (
-  eventId: string
-): Promise<AppResult<EventDetailDto>> => {
-  const deletedEvent = await deleteEventAction(eventId);
+  eventId: string,
+): Promise<EventDetailDto> => {
+  try {
+    const deletedEvent = await deleteEventDB(eventId);
 
-  if (deletedEvent.ok) {
-    revalidateTag('events', 'max');
+    revalidateTag("events", "max");
+    revalidateTag(`event-details-${deletedEvent.slug}`, "max");
+    revalidateTag(`similar-events-${deletedEvent.slug}`, "max");
 
-    if (deletedEvent.data?.slug) {
-      revalidateTag(`event-details-${deletedEvent.data.slug}`, 'max');
+    return toEventDetailDto(deletedEvent);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
     }
-  }
 
-  return deletedEvent;
+    throw new AppError("DB", "Failed to delete event", { status: 500 });
+  }
+};
+
+export const getSimilarEventsBySlugDAL = async (
+  slug: string,
+): Promise<SimilarEventDto[]> => {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`similar-events-${slug}`);
+
+  try {
+    const similarEvents = await getSimilarEventsBySlugDB(slug);
+
+    return similarEvents?.map((event) => toEventDetailDto(event)) ?? [];
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to get similar events by slug", {
+      status: 500,
+    });
+  }
+};
+
+export const getEventBySlugDAL = async (
+  slug: string,
+): Promise<EventDetailDto> => {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`event-details-${slug}`);
+
+  try {
+    const event = await getEventBySlugDB(slug);
+
+    return toEventDetailDto(event);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to get event by slug", { status: 500 });
+  }
+};
+
+export const bookEventDAL = async (
+  email: string,
+  eventId: string,
+): Promise<BookingDto> => {
+  try {
+    const booking = await bookEventDB(email, eventId);
+
+    revalidateTag(`bookings-${eventId}`, "max");
+
+    return toBookingDto(booking);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to book event", { status: 500 });
+  }
+};
+
+export const getBookingsByEventDAL = async (
+  eventId: string,
+): Promise<BookingDto[]> => {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag(`bookings-${eventId}`);
+
+  try {
+    const bookings = await getBookingsByEventDB(eventId);
+    console.log(
+      "bookings",
+      bookings.map((booking) => toBookingDto(booking)),
+    );
+    return bookings?.map((booking) => toBookingDto(booking)) ?? [];
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+
+    throw new AppError("DB", "Failed to get bookings by event", {
+      status: 500,
+    });
+  }
 };

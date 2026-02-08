@@ -1,11 +1,6 @@
 "use server";
 
-import { Types } from "mongoose";
-import { v2 as cloudinary } from "cloudinary";
-
-import { connectToDatabase } from "@/lib/mongodb";
-import { Booking, Event, EventDocument } from "@/database";
-import { toAppError } from "@/core/app-error";
+import { AppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
 import {
   BookingDto,
@@ -13,249 +8,153 @@ import {
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
-import { extractPublicIdFromUrl, toEventDetailDto } from "@/features/Event/helpers";
+import {
+  createEventService,
+  deleteEventService,
+  getBookingsByEventService,
+  getEventBySlugService,
+  getEventsService,
+  getSimilarEventsBySlugService,
+} from "@/features/Event/service.server";
+import { bookEventService } from "@/features/Event/service";
 
-export const getEventsAction = async (): Promise<AppResult<EventDetailDto[]>> => {
+export const getEventsAction = async (): Promise<
+  AppResult<EventDetailDto[]>
+> => {
   try {
-    await connectToDatabase();
+    const events = await getEventsService();
 
-    const events = await Event.find().sort({ createdAt: -1 }).select("title slug description overview image venue location date time mode audience agenda organizer tags").lean<EventDocument[]>();
-
-    return { ok: true, data: events.map((event) => toEventDetailDto(event)) };
+    return { ok: true, data: events };
   } catch (error) {
-    return toAppError(error, "Failed to get events");
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
+    }
+
+    return {
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while getting the events",
+    };
   }
 };
 
-export const createEventAction = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
+export const createEventAction = async (
+  event: CreateEventDto,
+): Promise<AppResult<EventDetailDto>> => {
   try {
-    await connectToDatabase();
+    const createdEvent = await createEventService(event);
 
-    const arrayBuffer = await event.image.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            resource_type: "image",
-            folder: "dev-events",
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
-            }
-          }
-        )
-        .end(buffer);
-    });
-    const imageUrl = (uploadResult as { secure_url: string }).secure_url;
-
-    const createdEvent = await Event.create({
-      ...event,
-      image: imageUrl,
-    });
+    return { ok: true, data: createdEvent };
+  } catch (error) {
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
+    }
 
     return {
-      ok: true,
-      data: toEventDetailDto(createdEvent),
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while creating the event",
     };
-  } catch (error) {
-    return toAppError(error, "Failed to create event");
   }
 };
 
 export const deleteEventAction = async (
-  eventId: string
+  eventId: string,
 ): Promise<AppResult<EventDetailDto>> => {
-  if (!eventId?.trim()) {
-    return { ok: false, code: "VALIDATION", message: "Event ID is required" };
-  }
-
   try {
-    await connectToDatabase();
+    const deletedEvent = await deleteEventService(eventId);
 
-    const event = await Event.findById(eventId);
-    if (!event) {
-      return { ok: false, code: "NOT_FOUND", message: "Event not found" };
-    }
-
-    if (event.image) {
-      const publicId = extractPublicIdFromUrl(event.image);
-
-      if (publicId) {
-        try {
-          const result = await new Promise<{ result: string }>(
-            (resolve, reject) => {
-              cloudinary.uploader.destroy(
-                publicId,
-                {
-                  invalidate: true,
-                  resource_type: "image",
-                },
-                (error, result) => {
-                  if (error) {
-                    reject(error);
-                  } else {
-                    resolve(result as { result: string });
-                  }
-                }
-              );
-            }
-          );
-
-          if (result && result.result === "ok") {
-            console.log(`Successfully deleted image from Cloudinary: ${publicId}`);
-          } else if (result && result.result === "not found") {
-            console.warn(
-              `Image not found in Cloudinary: ${publicId}. URL was: ${event.image}`
-            );
-          } else {
-            console.warn(`Unexpected result from Cloudinary destroy:`, result);
-          }
-        } catch (cloudinaryError) {
-          console.error(
-            `Error deleting image from Cloudinary (public_id: ${publicId}):`,
-            cloudinaryError
-          );
-        }
-      } else {
-        console.warn(`Could not extract public_id from URL: ${event.image}`);
-      }
-    }
-
-    await Event.findByIdAndDelete(eventId);
-
-    return { ok: true, data: toEventDetailDto(event) };
+    return { ok: true, data: deletedEvent };
   } catch (error) {
-    return toAppError(error, "Failed to delete event");
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
+    }
+
+    return {
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while deleting the event",
+    };
   }
 };
 
 export const getSimilarEventsBySlugAction = async (
-  slug: string
+  slug: string,
 ): Promise<AppResult<SimilarEventDto[]>> => {
   try {
-    await connectToDatabase();
+    const similarEvents = await getSimilarEventsBySlugService(slug);
 
-    const event = await Event.findOne({ slug });
-    if (!event) {
-      return { ok: false, code: "NOT_FOUND", message: "Event not found" };
+    return { ok: true, data: similarEvents };
+  } catch (error) {
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
     }
 
-    const similarEvents = await Event.find({
-      _id: { $ne: event._id },
-      tags: { $in: event.tags },
-    })
-      .select("title image slug location date time -_id")
-      .limit(3)
-      .lean<SimilarEventDto[]>();
-
     return {
-      ok: true,
-      data: similarEvents,
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while getting the similar events",
     };
-  } catch (error) {
-    return toAppError(error, "Failed to get similar events");
   }
 };
 
 export const getEventBySlugAction = async (
-  slug: string
+  slug: string,
 ): Promise<AppResult<EventDetailDto>> => {
-  const sanitizedSlug = slug?.trim().toLowerCase();
-  if (!sanitizedSlug) {
-    return { ok: false, code: "VALIDATION", message: "Event slug is required" };
-  }
-
   try {
-    await connectToDatabase();
+    const event = await getEventBySlugService(slug);
 
-    const event = await Event.findOne({ slug: sanitizedSlug })
-      .select(
-        "title slug description overview image venue location date time mode audience agenda organizer tags"
-      )
-      .lean<EventDetailDto<Types.ObjectId>>();
-    if (!event) {
-      return {
-        ok: false,
-        code: "NOT_FOUND",
-        message: `Event with slug "${sanitizedSlug}" not found`,
-      };
+    return { ok: true, data: event };
+  } catch (error) {
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
     }
 
-    return { ok: true, data: toEventDetailDto(event) };
-  } catch (error) {
-    return toAppError(error, "Failed to fetch event");
-  }
-};
-
-const validateBookingAction = async (
-  email: string,
-  eventId: string
-): Promise<AppResult<void>> => {
-  try {
-    await connectToDatabase();
-
-    const booking = await Booking.findOne({ email, eventId });
-    if (booking) {
-      return {
-        ok: false,
-        code: "CONFLICT",
-        message: "You have already booked this event.",
-      };
-    }
-
-    return { ok: true };
-  } catch (error) {
-    return toAppError(error, "Failed to validate booking");
+    return {
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while getting the event by slug",
+    };
   }
 };
 
 export const bookEventAction = async (
   email: string,
-  eventId: string
+  eventId: string,
 ): Promise<AppResult<BookingDto>> => {
   try {
-    await connectToDatabase();
+    const booking = await bookEventService(email, eventId);
 
-    const isValid = await validateBookingAction(email, eventId);
-    if (!isValid.ok) {
-      return isValid;
+    return { ok: true, data: booking };
+  } catch (error) {
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
     }
-    
-    const booking = await Booking.create({ email, eventId });
 
     return {
-      ok: true,
-      data: {
-        id: booking._id.toString(),
-        email: booking.email,
-        eventId: booking.eventId.toString(),
-      },
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while booking the event",
     };
-  } catch (error) {
-    return toAppError(error, "Failed to book event");
   }
 };
 
 export const getBookingsByEventAction = async (
-  eventId: string
+  eventId: string,
 ): Promise<AppResult<BookingDto[]>> => {
   try {
-    await connectToDatabase();
-
-    const bookings = await Booking.findByEvent(eventId);
-    return {
-      ok: true,
-      data: bookings.map((booking) => ({
-        email: booking.email,
-        eventId: booking.eventId.toString(),
-      })),
-    };
+    const bookings = await getBookingsByEventService(eventId);
+    console.log("bookings", bookings);
+    return { ok: true, data: bookings };
   } catch (error) {
-    return toAppError(error, "Failed to fetch bookings");
+    if (error instanceof AppError) {
+      return { ok: false, code: error.code, message: error.message };
+    }
+
+    return {
+      ok: false,
+      code: "UNKNOWN",
+      message: "An unknown error occurred while getting the bookings by event",
+    };
   }
 };

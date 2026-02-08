@@ -6,12 +6,12 @@ import EventAgenda from "@/features/Event/components/EventAgenda";
 import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
 import { EventCard } from "@/features/Event/components/EventCard";
-import {
-  getEventBySlugService,
-  getBookingsByEventService,
-  getSimilarEventsBySlugService,
-} from "@/features/Event/service.server";
 import { handleAppError } from "@/lib/app-error-ui";
+import {
+  getBookingsByEventAction,
+  getEventBySlugAction,
+  getSimilarEventsBySlugAction,
+} from "@/features/Event/actions";
 
 const EventDetailsPage = async ({
   params,
@@ -20,7 +20,7 @@ const EventDetailsPage = async ({
 }) => {
   const { slug } = await params;
 
-  const eventResult = await getEventBySlugService(slug);
+  const eventResult = await getEventBySlugAction(slug);
   if (!eventResult.ok) {
     if (eventResult.code === "NOT_FOUND") {
       return notFound();
@@ -37,9 +37,9 @@ const EventDetailsPage = async ({
     return notFound();
   }
 
-  const bookingsResult = await getBookingsByEventService(event._id);
+  const bookingsResult = await getBookingsByEventAction(event.id);
   const bookingCount = bookingsResult.ok
-    ? bookingsResult.data?.length ?? 0
+    ? (bookingsResult.data?.length ?? 0)
     : 0;
   const bookingCountError = bookingsResult.ok
     ? null
@@ -47,12 +47,12 @@ const EventDetailsPage = async ({
         fallbackMessage: "Booking count unavailable.",
       });
 
-  const similarEventsResult = await getSimilarEventsBySlugService(event.slug);
+  const similarEventsResult = await getSimilarEventsBySlugAction(event.slug);
   const similarEventsError = similarEventsResult.ok
     ? null
     : handleAppError(similarEventsResult);
   const similarEvents = similarEventsResult.ok
-    ? similarEventsResult.data ?? []
+    ? (similarEventsResult.data ?? [])
     : [];
 
   return (
@@ -131,7 +131,7 @@ const EventDetailsPage = async ({
               <p className="text-sm">Be the first to book your spot.</p>
             )}
 
-            <BookEvent eventId={event._id.toString()} />
+            <BookEvent eventId={event.id} />
           </div>
         </aside>
       </div>

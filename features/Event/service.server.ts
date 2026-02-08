@@ -1,47 +1,52 @@
 import "server-only";
 
 import { AppResult } from "@/core/types";
-import { BookingDto, CreateEventDto, EventDetailDto, SimilarEventDto } from "@/features/Event/types";
+import {
+  BookingDto,
+  CreateEventDto,
+  EventDetailDto,
+  SimilarEventDto,
+} from "@/features/Event/types";
 import {
   createEventDAL,
   deleteEventDAL,
   getEventBySlugDAL,
   getEventsDAL,
+  getBookingsByEventDAL,
+  getSimilarEventsBySlugDAL,
 } from "@/features/Event/dal";
-import {
-  getBookingsByEventAction,
-  getSimilarEventsBySlugAction,
-} from "@/features/Event/actions";
 
 /** Server-only wrappers keep UI usage consistent and enable caching. */
-export const getEventsService = async (): Promise<AppResult<EventDetailDto[]>> => {
+export const getEventsService = async (): Promise<EventDetailDto[]> => {
   return getEventsDAL();
 };
 
-export const createEventService = async (event: CreateEventDto): Promise<AppResult<EventDetailDto>> => {
+export const createEventService = async (
+  event: CreateEventDto,
+): Promise<EventDetailDto> => {
   return createEventDAL(event);
 };
 
 export const getBookingsByEventService = async (
-  eventId: string
-): Promise<AppResult<BookingDto[]>> => {
-  return getBookingsByEventAction(eventId);
+  eventId: string,
+): Promise<BookingDto[]> => {
+  return getBookingsByEventDAL(eventId);
 };
 
 export const getSimilarEventsBySlugService = async (
-  slug: string
-): Promise<AppResult<SimilarEventDto[]>> => {
-  return getSimilarEventsBySlugAction(slug);
+  slug: string,
+): Promise<SimilarEventDto[]> => {
+  return getSimilarEventsBySlugDAL(slug);
 };
 
 export const getEventBySlugService = async (
-  slug: string
-): Promise<AppResult<EventDetailDto>> => {
+  slug: string,
+): Promise<EventDetailDto> => {
   return getEventBySlugDAL(slug);
 };
 
 export const deleteEventService = async (
-  eventId: string
-): Promise<AppResult<EventDetailDto>> => {
+  eventId: string,
+): Promise<EventDetailDto> => {
   return deleteEventDAL(eventId);
 };

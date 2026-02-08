@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { toHttpStatus } from "@/lib/http-status";
 import {
-  createEventService,
-  deleteEventService,
-  getEventsService,
-} from "@/features/Event/service.server";
+  createEventAction,
+  deleteEventAction,
+  getEventsAction,
+} from "@/features/Event/actions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const createdEvent = await createEventService({
+    const createdEventResult = await createEventAction({
       title: event.title as string,
       description: event.description as string,
       overview: event.overview as string,
@@ -69,15 +69,18 @@ export async function POST(request: NextRequest) {
       tags: parsedTags,
     });
 
-    if (!createdEvent.ok) {
+    if (!createdEventResult.ok) {
       return NextResponse.json(
-        { message: createdEvent.message },
-        { status: toHttpStatus(createdEvent.code) },
+        { message: createdEventResult.message },
+        { status: toHttpStatus(createdEventResult.code) },
       );
     }
 
     return NextResponse.json(
-      { message: "Event created successfully", event: createdEvent.data! },
+      {
+        message: "Event created successfully",
+        event: createdEventResult.data!,
+      },
       { status: 201 },
     );
   } catch (error) {
@@ -94,16 +97,16 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const result = await getEventsService();
+    const eventsResult = await getEventsAction();
 
-    if (!result.ok) {
-      const status = toHttpStatus(result.code);
-      const message = result.message ?? "Events fetching failed";
+    if (!eventsResult.ok) {
+      const status = toHttpStatus(eventsResult.code);
+      const message = eventsResult.message ?? "Events fetching failed";
       return NextResponse.json({ message, error: message }, { status });
     }
 
     return NextResponse.json(
-      { message: "Events fetched successfully", events: result.data },
+      { message: "Events fetched successfully", events: eventsResult.data },
       { status: 200 },
     );
   } catch (error) {
@@ -130,16 +133,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const deletedEvent = await deleteEventService(eventId);
-    if (!deletedEvent.ok) {
+    const deletedEventResult = await deleteEventAction(eventId);
+    if (!deletedEventResult.ok) {
       return NextResponse.json(
-        { message: deletedEvent.message },
-        { status: toHttpStatus(deletedEvent.code) },
+        { message: deletedEventResult.message },
+        { status: toHttpStatus(deletedEventResult.code) },
       );
     }
 
     return NextResponse.json(
-      { message: "Event deleted successfully", event: deletedEvent.data },
+      { message: "Event deleted successfully", event: deletedEventResult.data },
       { status: 200 },
     );
   } catch (error) {

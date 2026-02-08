@@ -5,7 +5,9 @@ export type AppErrorCode =
   | "NOT_FOUND"
   | "BUSINESS"
   | "INTERNAL"
-  | "CONFLICT";
+  | "CONFLICT"
+  | "DB"
+  | "UNKNOWN";
 
 export type AppResult<T> =
   | {

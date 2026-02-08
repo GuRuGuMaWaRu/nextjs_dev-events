@@ -24,7 +24,6 @@ export type CreateEventDto = {
 export type EventDetailDto<id = string> = Pick<
   EventDocument,
   | "title"
-  | "slug"
   | "description"
   | "overview"
   | "image"
@@ -37,12 +36,12 @@ export type EventDetailDto<id = string> = Pick<
   | "agenda"
   | "organizer"
   | "tags"
+  | "slug"
 > & {
-  _id: id;
+  id: id;
 };
 
 export type BookingDto = {
   email: string;
   eventId: string;
-  id?: string;
 };

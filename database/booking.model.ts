@@ -8,7 +8,6 @@ import {
 } from "mongoose";
 
 import { Event } from "@/database/event.model";
-import { BookingDto } from "@/features/Event/types";
 
 // Attributes required to create a Booking.
 export interface BookingAttrs {
@@ -23,9 +22,8 @@ export interface BookingDocument extends Document, BookingAttrs {
 }
 
 export interface BookingModel extends Model<BookingDocument> {
-  findByEvent(eventId: string): Promise<BookingDto[]>;
+  findByEvent(eventId: string): Promise<BookingDocument[]>;
 }
-
 
 const bookingSchema = new Schema<BookingDocument, BookingModel>(
   {
@@ -50,7 +48,7 @@ const bookingSchema = new Schema<BookingDocument, BookingModel>(
   },
   {
     timestamps: true, // automatically manages createdAt and updatedAt
-  }
+  },
 );
 
 // Performance indexes for common query patterns.
@@ -68,7 +66,7 @@ bookingSchema.pre("save", async function (this: BookingDocument) {
     const event = await Event.findById(this.eventId);
     if (!event) {
       throw new Error(
-        "Referenced event does not exist. Cannot create booking for non-existent event."
+        "Referenced event does not exist. Cannot create booking for non-existent event.",
       );
     }
 
@@ -77,7 +75,7 @@ bookingSchema.pre("save", async function (this: BookingDocument) {
     const eventDateTime = new Date(`${event.date}T${event.time}Z`);
     if (eventDateTime < new Date()) {
       throw new Error(
-        "Cannot create booking for past events. Please select an upcoming event."
+        "Cannot create booking for past events. Please select an upcoming event.",
       );
     }
   }
@@ -86,17 +84,14 @@ bookingSchema.pre("save", async function (this: BookingDocument) {
 // Static method to find all bookings for a specific event.
 bookingSchema.statics.findByEvent = async function (
   this: BookingModel,
-  eventId: string
-): Promise<BookingDto[]> {
+  eventId: string,
+): Promise<BookingDocument[]> {
   const bookings = await this.find({ eventId })
     .sort({ createdAt: -1 })
     .select("email eventId -_id")
-    .lean<{ email: string; eventId: Types.ObjectId }[]>();
+    .lean<BookingDocument[]>();
 
-  return bookings.map((booking) => ({
-    email: booking.email,
-    eventId: booking.eventId.toString(),
-  }));
+  return bookings;
 };
 
 export const Booking: BookingModel =
