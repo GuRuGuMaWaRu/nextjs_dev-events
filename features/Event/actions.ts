@@ -17,6 +17,7 @@ import {
   getSimilarEventsBySlugService,
 } from "@/features/Event/service.server";
 import { bookEventService } from "@/features/Event/service";
+import { normalizeSlug } from "@/features/Event/helpers";
 
 export const getEventsAction = async (): Promise<
   AppResult<EventDetailDto[]>
@@ -102,7 +103,8 @@ export const getEventBySlugAction = async (
   slug: string,
 ): Promise<AppResult<EventDetailDto>> => {
   try {
-    const event = await getEventBySlugService(slug);
+    const normalizedSlug = normalizeSlug(slug);
+    const event = await getEventBySlugService(normalizedSlug);
 
     return { ok: true, data: event };
   } catch (error) {

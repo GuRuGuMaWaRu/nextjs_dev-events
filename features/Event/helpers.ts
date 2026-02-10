@@ -66,3 +66,7 @@ export const extractPublicIdFromUrl = (url: string): string | null => {
     return null;
   }
 };
+
+export const normalizeSlug = (slug: string): string => {
+  return slug.trim().toLowerCase().replace(/ /g, "-");
+};
