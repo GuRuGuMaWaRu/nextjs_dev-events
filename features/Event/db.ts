@@ -6,7 +6,10 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { Booking, BookingDocument, Event, EventDocument } from "@/database";
 import { AppError } from "@/core/app-error";
 import { CreateEventDto } from "@/features/Event/types";
-import { extractPublicIdFromUrl } from "@/features/Event/helpers";
+import {
+  extractPublicIdFromUrl,
+  uploadToCloudinary,
+} from "@/features/Event/helpers";
 
 export const getEventsDB = async (): Promise<EventDocument[]> => {
   await connectToDatabase();
@@ -26,30 +29,21 @@ export const createEventDB = async (
 ): Promise<EventDocument> => {
   await connectToDatabase();
 
-  const arrayBuffer = await event.image.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  const uploadResult = await new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream(
-        {
-          resource_type: "image",
-          folder: "dev-events",
-        },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        },
-      )
-      .end(buffer);
-  });
-  const imageUrl = (uploadResult as { secure_url: string }).secure_url;
+  const { secure_url: imageUrl } = await uploadToCloudinary(event.image);
 
   const createdEvent = await Event.create({
-    ...event,
+    title: event.title,
+    description: event.description,
+    overview: event.overview,
+    venue: event.venue,
+    location: event.location,
+    date: event.date,
+    time: event.time,
+    mode: event.mode,
+    audience: event.audience,
+    agenda: event.agenda,
+    organizer: event.organizer,
+    tags: event.tags,
     image: imageUrl,
   });
 
