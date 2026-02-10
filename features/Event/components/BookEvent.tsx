@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useActionState } from "react";
 
 import { toastAppError } from "@/lib/app-error-ui";
 import { bookEventAction } from "@/features/Event/actions";
@@ -14,34 +14,27 @@ type BookEventProps = {
 
 const BookEvent = ({ eventId }: BookEventProps) => {
   const [state, formAction, isPending] = useActionState<
-    AppResult<BookingDto>,
+    AppResult<BookingDto> | null,
     FormData
-  >(
-    async (_prev, formData) => {
-      const email = String(formData.get("email") ?? "");
-      if (!email) {
-        return { ok: false, code: "VALIDATION", message: "Email required" };
-      }
+  >(async (_prev, formData) => {
+    const email = String(formData.get("email") ?? "");
+    if (!email) {
+      return { ok: false, code: "VALIDATION", message: "Email required" };
+    }
 
-      const result = await bookEventAction(email, eventId);
+    const result = await bookEventAction(email, eventId);
 
-      if (result.ok) {
-        toast.success("Event booked successfully");
-      } else {
-        toastAppError(result);
-      }
-      return result;
-    },
-    {
-      ok: false,
-      code: "UNKNOWN",
-      message: "An unknown error occurred while booking the event",
-    },
-  );
+    if (result.ok) {
+      toast.success("Event booked successfully");
+    } else {
+      toastAppError(result);
+    }
+    return result;
+  }, null);
 
   return (
     <section id="book-event">
-      {state.ok ? (
+      {state?.ok ? (
         <p>Thank you for signing up!</p>
       ) : (
         <form action={formAction}>
