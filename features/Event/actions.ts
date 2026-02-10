@@ -159,7 +159,6 @@ export const getBookingsByEventAction = async (
 ): Promise<AppResult<BookingDto[]>> => {
   try {
     const bookings = await getBookingsByEventService(eventId);
-    console.log("bookings", bookings);
     return { ok: true, data: bookings };
   } catch (error) {
     if (error instanceof AppError) {
