@@ -1,10 +1,12 @@
 "use server";
 
+import { z } from "zod";
+
 import { AppError } from "@/core/app-error";
 import { AppResult } from "@/core/types";
+import { zodIssuesToFieldErrors } from "@/lib/zod-issue-field-converter";
 import {
   BookingDto,
-  CreateEventDto,
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
@@ -40,7 +42,7 @@ export const getEventsAction = async (): Promise<
 };
 
 export const createEventAction = async (
-  event: CreateEventDto,
+  event: unknown,
 ): Promise<AppResult<EventDetailDto>> => {
   try {
     const createdEvent = await createEventService(event);
@@ -48,7 +50,18 @@ export const createEventAction = async (
     return { ok: true, data: createdEvent };
   } catch (error) {
     if (error instanceof AppError) {
-      return { ok: false, code: error.code, message: error.message };
+      return {
+        ok: false,
+        code: error.code,
+        message: error.message,
+        ...(error.cause
+          ? {
+              details: zodIssuesToFieldErrors(
+                error.cause as z.core.$ZodIssue[],
+              ),
+            }
+          : {}),
+      };
     }
 
     return {

@@ -19,4 +19,5 @@ export type AppResult<T> =
       code: AppErrorCode;
       message?: string;
       fieldErrors?: Record<string, string>;
+      details?: unknown;
     };

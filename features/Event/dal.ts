@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife, cacheTag, revalidateTag } from "next/cache";
+import { cacheLife, cacheTag, revalidateTag, revalidatePath } from "next/cache";
 
 import { AppError } from "@/core/app-error";
 import {
@@ -45,6 +45,7 @@ export const createEventDAL = async (
     const newEvent = await createEventDB(event);
 
     revalidateTag("events", "max");
+    revalidatePath("/");
 
     return toEventDetailDto(newEvent);
   } catch (error) {

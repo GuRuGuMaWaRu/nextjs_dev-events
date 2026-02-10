@@ -2,7 +2,6 @@ import "server-only";
 
 import {
   BookingDto,
-  CreateEventDto,
   EventDetailDto,
   SimilarEventDto,
 } from "@/features/Event/types";
@@ -14,6 +13,8 @@ import {
   getBookingsByEventDAL,
   getSimilarEventsBySlugDAL,
 } from "@/features/Event/dal";
+import { EventSchema } from "@/lib/schemas";
+import { AppError } from "@/core/app-error";
 
 /** Server-only wrappers keep UI usage consistent and enable caching. */
 export const getEventsService = async (): Promise<EventDetailDto[]> => {
@@ -21,9 +22,18 @@ export const getEventsService = async (): Promise<EventDetailDto[]> => {
 };
 
 export const createEventService = async (
-  event: CreateEventDto,
+  event: unknown,
 ): Promise<EventDetailDto> => {
-  return createEventDAL(event);
+  const validatedEvent = EventSchema.safeParse(event);
+
+  if (!validatedEvent.success) {
+    throw new AppError("VALIDATION", "Invalid event payload", {
+      status: 400,
+      cause: validatedEvent.error.issues,
+    });
+  }
+
+  return createEventDAL(validatedEvent.data);
 };
 
 export const getBookingsByEventService = async (

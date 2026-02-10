@@ -1,7 +1,4 @@
 import { Types } from "mongoose";
-import { Readable } from "node:stream";
-import { ReadableStream } from "node:stream/web";
-import { v2 as cloudinary } from "cloudinary";
 
 import { BookingDocument, EventDocument } from "@/database";
 import { BookingDto, EventDetailDto } from "@/features/Event/types";
@@ -72,25 +69,4 @@ export const extractPublicIdFromUrl = (url: string): string | null => {
 
 export const normalizeSlug = (slug: string): string => {
   return slug.trim().toLowerCase().replace(/ /g, "-");
-};
-
-export const uploadToCloudinary = (
-  file: File,
-): Promise<{ secure_url: string }> => {
-  return new Promise((resolve, reject) => {
-    const upload = cloudinary.uploader.upload_stream(
-      { resource_type: "image", folder: "dev-events" },
-      (error, result) => {
-        if (error || !result) {
-          reject(error ?? new Error("Cloudinary upload failed"));
-          return;
-        }
-        resolve(result as { secure_url: string });
-      },
-    );
-
-    Readable.fromWeb(
-      file.stream() as unknown as ReadableStream,
-    ).pipe(upload);
-  });
 };

@@ -3,13 +3,11 @@
 import { v2 as cloudinary } from "cloudinary";
 
 import { connectToDatabase } from "@/lib/mongodb";
+import { uploadToCloudinary } from "@/lib/upload-to-cloudinary";
 import { Booking, BookingDocument, Event, EventDocument } from "@/database";
 import { AppError } from "@/core/app-error";
 import { CreateEventDto } from "@/features/Event/types";
-import {
-  extractPublicIdFromUrl,
-  uploadToCloudinary,
-} from "@/features/Event/helpers";
+import { extractPublicIdFromUrl } from "@/features/Event/helpers";
 
 export const getEventsDB = async (): Promise<EventDocument[]> => {
   await connectToDatabase();

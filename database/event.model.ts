@@ -4,7 +4,11 @@ import { Schema, model, models, type Document, type Model } from "mongoose";
 export type EventMode = "online" | "offline" | "hybrid";
 
 // Valid event mode values for validation.
-const VALID_EVENT_MODES: EventMode[] = ["online", "offline", "hybrid"];
+export const VALID_EVENT_MODES: EventMode[] = [
+  "online",
+  "offline",
+  "hybrid",
+] as const;
 
 // Attributes required to create an Event.
 export interface EventAttrs {
@@ -128,7 +132,7 @@ const eventSchema = new Schema<EventDocument, EventModel>(
         return ret;
       },
     },
-  }
+  },
 );
 
 // Performance indexes for common query patterns.
@@ -155,7 +159,7 @@ const MAX_SLUG_ATTEMPTS = 1000;
 async function generateUniqueSlug(
   model: EventModel,
   baseSlug: string,
-  excludeId?: string
+  excludeId?: string,
 ): Promise<string> {
   let slug = baseSlug;
   let counter = 1;
@@ -177,7 +181,7 @@ async function generateUniqueSlug(
 
   // Fallback: append timestamp if we exceed max attempts (extremely rare edge case)
   throw new Error(
-    `Unable to generate unique slug after ${MAX_SLUG_ATTEMPTS} attempts. Please try a different title.`
+    `Unable to generate unique slug after ${MAX_SLUG_ATTEMPTS} attempts. Please try a different title.`,
   );
 }
 
@@ -300,7 +304,7 @@ eventSchema.pre("save", async function (this: EventDocument) {
       throw new Error(`Field "${field}" must be a non-empty array.`);
     }
     const hasInvalidItem = value.some(
-      (item) => typeof item !== "string" || item.trim().length === 0
+      (item) => typeof item !== "string" || item.trim().length === 0,
     );
     if (hasInvalidItem) {
       throw new Error(`Field "${field}" must contain only non-empty strings.`);
@@ -346,7 +350,7 @@ eventSchema.statics.findUpcoming = function (this: EventModel, limit = 10) {
 eventSchema.statics.findByMode = function (
   this: EventModel,
   mode: EventMode,
-  limit = 50
+  limit = 50,
 ) {
   return this.find({ mode }).sort({ date: 1, time: 1 }).limit(limit);
 };

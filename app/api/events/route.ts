@@ -10,68 +10,15 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    let event;
-    try {
-      event = Object.fromEntries(formData.entries());
-    } catch (error) {
-      console.error(error);
-      return NextResponse.json(
-        { message: "Invalid form data" },
-        { status: 400 },
-      );
-    }
-
-    const file = formData.get("image") as File;
-    if (!file) {
-      return NextResponse.json(
-        { message: "Image is required" },
-        { status: 400 },
-      );
-    }
-
-    const tagsRaw = formData.get("tags");
-    const agendaRaw = formData.get("agenda");
-
-    if (!tagsRaw || !agendaRaw) {
-      return NextResponse.json(
-        { message: "Tags and agenda are required" },
-        { status: 400 },
-      );
-    }
-
-    let parsedTags: string[];
-    let parsedAgenda: string[];
-
-    try {
-      parsedTags = JSON.parse(tagsRaw as string) as string[];
-      parsedAgenda = JSON.parse(agendaRaw as string) as string[];
-    } catch (error) {
-      console.error(error);
-      return NextResponse.json(
-        { message: "Invalid tags or agenda format" },
-        { status: 400 },
-      );
-    }
-
-    const createdEventResult = await createEventAction({
-      title: event.title as string,
-      description: event.description as string,
-      overview: event.overview as string,
-      image: file,
-      venue: event.venue as string,
-      location: event.location as string,
-      date: event.date as string,
-      time: event.time as string,
-      mode: event.mode as string,
-      audience: event.audience as string,
-      agenda: parsedAgenda,
-      organizer: event.organizer as string,
-      tags: parsedTags,
-    });
+    const raw = Object.fromEntries(formData.entries());
+    const createdEventResult = await createEventAction(raw);
 
     if (!createdEventResult.ok) {
       return NextResponse.json(
-        { message: createdEventResult.message },
+        {
+          message: createdEventResult.message,
+          details: createdEventResult.details,
+        },
         { status: toHttpStatus(createdEventResult.code) },
       );
     }
