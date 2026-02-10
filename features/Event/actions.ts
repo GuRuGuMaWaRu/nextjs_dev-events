@@ -14,11 +14,11 @@ import {
   createEventService,
   deleteEventService,
   getBookingsByEventService,
+  bookEventService,
   getEventBySlugService,
   getEventsService,
   getSimilarEventsBySlugService,
-} from "@/features/Event/service.server";
-import { bookEventService } from "@/features/Event/service";
+} from "@/features/Event/service";
 import { normalizeSlug } from "@/features/Event/helpers";
 
 export const getEventsAction = async (): Promise<
