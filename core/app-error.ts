@@ -17,17 +17,15 @@ const DEFAULT_ERROR_MESSAGES: Record<AppErrorCode, string> = {
 export class AppError extends Error {
   public readonly code: AppErrorCode;
   public readonly status?: number;
-  public readonly cause?: unknown;
 
   public constructor(
     code: AppErrorCode,
     message: string,
     options?: { status?: number; cause?: unknown },
   ) {
-    super(message);
+    super(message, { cause: options?.cause });
     this.code = code;
     this.status = options?.status;
-    this.cause = options?.cause;
   }
 }
 
