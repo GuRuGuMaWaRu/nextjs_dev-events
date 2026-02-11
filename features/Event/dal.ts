@@ -141,6 +141,10 @@ export const bookEventDAL = async (
       });
     }
 
+    if (error instanceof AppError) {
+      throw error;
+    }
+
     throw new AppError("DB", "Failed to book event", { status: 500 });
   }
 };
