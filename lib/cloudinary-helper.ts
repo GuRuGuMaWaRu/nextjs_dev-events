@@ -1,5 +1,3 @@
-export const runtime = "nodejs";
-
 import { Readable } from "node:stream";
 import { ReadableStream } from "node:stream/web";
 import { v2 as cloudinary } from "cloudinary";
@@ -80,9 +78,7 @@ export async function deleteImageFromCloudinary(
     });
 
     if (result?.result === "ok") {
-      console.log(
-        `Successfully deleted image from Cloudinary: ${publicId}`,
-      );
+      console.log(`Successfully deleted image from Cloudinary: ${publicId}`);
     } else if (result?.result === "not found") {
       console.warn(
         `Image not found in Cloudinary: ${publicId}. URL was: ${imageUrl}`,
