@@ -37,7 +37,11 @@ const EventDetailsPage = async ({
     return notFound();
   }
 
-  const bookingsResult = await getBookingsByEventAction(event.id);
+  const [bookingsResult, similarEventsResult] = await Promise.all([
+    getBookingsByEventAction(event.id),
+    getSimilarEventsBySlugAction(event.slug),
+  ]);
+
   const bookingCount = bookingsResult.ok
     ? (bookingsResult.data?.length ?? 0)
     : 0;
@@ -47,7 +51,6 @@ const EventDetailsPage = async ({
         fallbackMessage: "Booking count unavailable.",
       });
 
-  const similarEventsResult = await getSimilarEventsBySlugAction(event.slug);
   const similarEventsError = similarEventsResult.ok
     ? null
     : handleAppError(similarEventsResult);
