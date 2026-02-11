@@ -6,11 +6,25 @@ import {
   getEventsAction,
 } from "@/features/Event/actions";
 
+function formDataToRaw(formData: FormData): Record<string, unknown> {
+  const raw: Record<string, unknown> = {};
+  const processedKeys = new Set<string>();
+
+  for (const key of formData.keys()) {
+    if (processedKeys.has(key)) continue;
+    processedKeys.add(key);
+    const values = formData.getAll(key);
+    raw[key] = values.length > 1 ? values : values[0];
+  }
+
+  return raw;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    const raw = Object.fromEntries(formData.entries());
+    const raw = formDataToRaw(formData);
     const createdEventResult = await createEventAction(raw);
 
     if (!createdEventResult.ok) {
