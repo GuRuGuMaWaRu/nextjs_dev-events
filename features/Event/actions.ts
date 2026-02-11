@@ -96,7 +96,8 @@ export const getSimilarEventsBySlugAction = async (
   slug: string,
 ): Promise<AppResult<SimilarEventDto[]>> => {
   try {
-    const similarEvents = await getSimilarEventsBySlugService(slug);
+    const normalizedSlug = normalizeSlug(slug);
+    const similarEvents = await getSimilarEventsBySlugService(normalizedSlug);
 
     return { ok: true, data: similarEvents };
   } catch (error) {
