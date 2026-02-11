@@ -1,14 +1,10 @@
 import { Schema, model, models, type Document, type Model } from "mongoose";
 
-// Domain type for event modes.
-export type EventMode = "online" | "offline" | "hybrid";
-
 // Valid event mode values for validation.
-export const VALID_EVENT_MODES: EventMode[] = [
-  "online",
-  "offline",
-  "hybrid",
-] as const;
+export const VALID_EVENT_MODES = ["online", "offline", "hybrid"] as const;
+
+// Domain type for event modes.
+export type EventMode = (typeof VALID_EVENT_MODES)[number];
 
 // Attributes required to create an Event.
 export interface EventAttrs {
