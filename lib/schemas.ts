@@ -68,8 +68,8 @@ const StringArrayFromAnything = z.preprocess(
 
 export const EventSchema = z.object({
   title: Text.min(1).max(200),
-  description: Text.min(11).max(500),
-  overview: Text.min(11).max(2000),
+  description: Text.min(10).max(500),
+  overview: Text.min(10).max(2000),
   image: ImageSchema,
   venue: Text.min(1).max(200),
   location: Text.min(1).max(200),

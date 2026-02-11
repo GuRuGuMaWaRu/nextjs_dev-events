@@ -54,7 +54,7 @@ const eventSchema = new Schema<EventDocument, EventModel>(
       type: String,
       required: true,
       trim: true,
-      maxlength: [5000, "Description cannot exceed 5000 characters."],
+      maxlength: [500, "Description cannot exceed 500 characters."],
       minlength: [10, "Description must be at least 10 characters."],
     },
     overview: {
@@ -97,7 +97,7 @@ const eventSchema = new Schema<EventDocument, EventModel>(
       type: String,
       required: true,
       trim: true,
-      maxlength: [500, "Audience cannot exceed 500 characters."],
+      maxlength: [200, "Audience cannot exceed 200 characters."],
     },
     agenda: {
       type: [String],
