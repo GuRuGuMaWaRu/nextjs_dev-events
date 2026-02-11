@@ -1,4 +1,4 @@
-import { EventDocument } from "@/database";
+import { EventDocument, EventMode } from "@/database";
 
 export type SimilarEventDto = Pick<
   EventDocument,
@@ -14,7 +14,7 @@ export type CreateEventDto = {
   location: string;
   date: string;
   time: string;
-  mode: string;
+  mode: EventMode;
   audience: string;
   agenda: string[];
   organizer: string;
