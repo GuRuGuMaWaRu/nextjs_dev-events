@@ -154,10 +154,7 @@ export const getBookingsByEventDAL = async (
 
   try {
     const bookings = await getBookingsByEventDB(eventId);
-    console.log(
-      "bookings",
-      bookings.map((booking) => toBookingDto(booking)),
-    );
+
     return bookings?.map((booking) => toBookingDto(booking)) ?? [];
   } catch (error) {
     if (error instanceof AppError) {
