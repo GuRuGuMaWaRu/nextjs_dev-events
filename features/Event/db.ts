@@ -57,14 +57,15 @@ export const deleteEventDB = async (
 
   await connectToDatabase();
 
-  const event = await Event.findById(eventId);
+  const deletedEvent = await Event.findByIdAndDelete(eventId);
 
-  if (!event) {
+  if (!deletedEvent) {
     throw new AppError("NOT_FOUND", "Event not found", { status: 404 });
   }
 
-  if (event.image) {
-    const publicId = extractPublicIdFromUrl(event.image);
+  const imageUrl = deletedEvent.image;
+  if (imageUrl) {
+    const publicId = extractPublicIdFromUrl(imageUrl);
 
     if (publicId) {
       try {
@@ -93,25 +94,23 @@ export const deleteEventDB = async (
           );
         } else if (result && result.result === "not found") {
           console.warn(
-            `Image not found in Cloudinary: ${publicId}. URL was: ${event.image}`,
+            `Image not found in Cloudinary: ${publicId}. URL was: ${imageUrl}`,
           );
         } else {
           console.warn(`Unexpected result from Cloudinary destroy:`, result);
         }
       } catch (cloudinaryError) {
         console.error(
-          `Error deleting image from Cloudinary (public_id: ${publicId}):`,
+          `Error deleting image from Cloudinary (public_id: ${publicId}, url: ${imageUrl}):`,
           cloudinaryError,
         );
       }
     } else {
-      console.warn(`Could not extract public_id from URL: ${event.image}`);
+      console.warn(`Could not extract public_id from URL: ${imageUrl}`);
     }
   }
 
-  await Event.findByIdAndDelete(eventId);
-
-  return event;
+  return deletedEvent;
 };
 
 export const getSimilarEventsBySlugDB = async (
