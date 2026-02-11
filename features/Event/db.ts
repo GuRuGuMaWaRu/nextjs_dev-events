@@ -1,13 +1,13 @@
 import "server-only";
 
-import { v2 as cloudinary } from "cloudinary";
-
 import { connectToDatabase } from "@/lib/mongodb";
-import { uploadToCloudinary } from "@/lib/upload-to-cloudinary";
+import {
+  deleteImageFromCloudinary,
+  uploadToCloudinary,
+} from "@/lib/cloudinary-helper";
 import { Booking, BookingDocument, Event, EventDocument } from "@/database";
 import { AppError } from "@/core/app-error";
 import { CreateEventDto } from "@/features/Event/types";
-import { extractPublicIdFromUrl } from "@/features/Event/helpers";
 
 export const getEventsDB = async (): Promise<EventDocument[]> => {
   await connectToDatabase();
@@ -29,23 +29,27 @@ export const createEventDB = async (
 
   const { secure_url: imageUrl } = await uploadToCloudinary(event.image);
 
-  const createdEvent = await Event.create({
-    title: event.title,
-    description: event.description,
-    overview: event.overview,
-    venue: event.venue,
-    location: event.location,
-    date: event.date,
-    time: event.time,
-    mode: event.mode,
-    audience: event.audience,
-    agenda: event.agenda,
-    organizer: event.organizer,
-    tags: event.tags,
-    image: imageUrl,
-  });
-
-  return createdEvent;
+  try {
+    const createdEvent = await Event.create({
+      title: event.title,
+      description: event.description,
+      overview: event.overview,
+      venue: event.venue,
+      location: event.location,
+      date: event.date,
+      time: event.time,
+      mode: event.mode,
+      audience: event.audience,
+      agenda: event.agenda,
+      organizer: event.organizer,
+      tags: event.tags,
+      image: imageUrl,
+    });
+    return createdEvent;
+  } catch (createError) {
+    await deleteImageFromCloudinary(imageUrl);
+    throw createError;
+  }
 };
 
 export const deleteEventDB = async (
@@ -63,51 +67,8 @@ export const deleteEventDB = async (
     throw new AppError("NOT_FOUND", "Event not found", { status: 404 });
   }
 
-  const imageUrl = deletedEvent.image;
-  if (imageUrl) {
-    const publicId = extractPublicIdFromUrl(imageUrl);
-
-    if (publicId) {
-      try {
-        const result = await new Promise<{ result: string }>(
-          (resolve, reject) => {
-            cloudinary.uploader.destroy(
-              publicId,
-              {
-                invalidate: true,
-                resource_type: "image",
-              },
-              (error, result) => {
-                if (error) {
-                  reject(error);
-                } else {
-                  resolve(result as { result: string });
-                }
-              },
-            );
-          },
-        );
-
-        if (result && result.result === "ok") {
-          console.log(
-            `Successfully deleted image from Cloudinary: ${publicId}`,
-          );
-        } else if (result && result.result === "not found") {
-          console.warn(
-            `Image not found in Cloudinary: ${publicId}. URL was: ${imageUrl}`,
-          );
-        } else {
-          console.warn(`Unexpected result from Cloudinary destroy:`, result);
-        }
-      } catch (cloudinaryError) {
-        console.error(
-          `Error deleting image from Cloudinary (public_id: ${publicId}, url: ${imageUrl}):`,
-          cloudinaryError,
-        );
-      }
-    } else {
-      console.warn(`Could not extract public_id from URL: ${imageUrl}`);
-    }
+  if (deletedEvent.image) {
+    await deleteImageFromCloudinary(deletedEvent.image);
   }
 
   return deletedEvent;
