@@ -145,8 +145,8 @@ const EventDetailsPage = async ({
           <p className="text-sm">{similarEventsError}</p>
         ) : (
           <div className="events">
-            {similarEvents.map((event) => (
-              <EventCard key={event.slug} {...event} />
+            {similarEvents.map((similarEvent) => (
+              <EventCard key={similarEvent.slug} {...similarEvent} />
             ))}
           </div>
         )}
