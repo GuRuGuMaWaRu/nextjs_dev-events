@@ -82,4 +82,9 @@ export const EventSchema = z.object({
   tags: StringArrayFromAnything,
 });
 
+export const BookEventSchema = z.object({
+  email: z.email("Invalid email address"),
+});
+
 export type EventSchemaType = z.infer<typeof EventSchema>;
+export type BookEventSchemaType = z.infer<typeof BookEventSchema>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import { toastAppError } from "@/lib/app-error-ui";
 import { bookEventAction } from "@/features/Event/actions";
@@ -17,20 +17,27 @@ const BookEvent = ({ eventId }: BookEventProps) => {
     AppResult<BookingDto> | null,
     FormData
   >(async (_prev, formData) => {
-    const email = String(formData.get("email") ?? "");
+    const raw = formData.get("email");
+    const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+
     if (!email) {
       return { ok: false, code: "VALIDATION", message: "Email required" };
     }
 
-    const result = await bookEventAction(email, eventId);
+    return bookEventAction(email, eventId);
+  }, null);
 
-    if (result.ok) {
+  useEffect(() => {
+    if (!state) {
+      return;
+    }
+
+    if (state.ok) {
       toast.success("Event booked successfully");
     } else {
-      toastAppError(result);
+      toastAppError(state);
     }
-    return result;
-  }, null);
+  }, [state]);
 
   return (
     <section id="book-event">
@@ -47,7 +54,13 @@ const BookEvent = ({ eventId }: BookEventProps) => {
               name="email"
               required
               disabled={isPending}
+              aria-invalid={state?.ok === false}
             />
+            {state?.ok === false ? (
+              <p role="alert" className="text-destructive text-sm">
+                {state.message}
+              </p>
+            ) : null}
           </div>
           <button type="submit" className="button-submit" disabled={isPending}>
             {isPending ? "Booking..." : "Book Now"}
