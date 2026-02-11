@@ -31,7 +31,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           message: createdEventResult.message,
-          details: createdEventResult.details,
+          ...(createdEventResult.fieldErrors && {
+            fieldErrors: createdEventResult.fieldErrors,
+          }),
         },
         { status: toHttpStatus(createdEventResult.code) },
       );

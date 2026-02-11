@@ -50,17 +50,16 @@ export const createEventAction = async (
     return { ok: true, data: createdEvent };
   } catch (error) {
     if (error instanceof AppError) {
+      const fieldErrors =
+        error.code === "VALIDATION" && error.cause
+          ? zodIssuesToFieldErrors(error.cause as z.core.$ZodIssue[])
+          : undefined;
+
       return {
         ok: false,
         code: error.code,
         message: error.message,
-        ...(error.cause
-          ? {
-              details: zodIssuesToFieldErrors(
-                error.cause as z.core.$ZodIssue[],
-              ),
-            }
-          : {}),
+        ...(fieldErrors && { fieldErrors }),
       };
     }
 
