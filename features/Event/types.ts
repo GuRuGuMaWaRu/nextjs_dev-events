@@ -21,7 +21,7 @@ export type CreateEventDto = {
   tags: string[];
 };
 
-export type EventDetailDto<id = string> = Pick<
+export type EventDetailDto<T = string> = Pick<
   EventDocument,
   | "title"
   | "description"
@@ -38,7 +38,7 @@ export type EventDetailDto<id = string> = Pick<
   | "tags"
   | "slug"
 > & {
-  id: id;
+  id: T;
 };
 
 export type BookingDto = {
