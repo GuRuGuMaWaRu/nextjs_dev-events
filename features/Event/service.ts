@@ -1,29 +1,69 @@
-import { Types } from "mongoose";
+import "server-only";
 
-import { AppResult } from "@/core/types";
-import { BookingDto, SimilarEventDto } from "@/features/Event/types";
 import {
-  bookEventAction,
-  getBookingsByEventAction,
-  getSimilarEventsBySlugAction,
-} from "@/features/Event/actions";
+  BookingDto,
+  EventDetailDto,
+  SimilarEventDto,
+} from "@/features/Event/types";
+import {
+  createEventDAL,
+  deleteEventDAL,
+  getEventBySlugDAL,
+  getEventsDAL,
+  getBookingsByEventDAL,
+  getSimilarEventsBySlugDAL,
+  bookEventDAL,
+} from "@/features/Event/dal";
+import { EventSchema } from "@/lib/schemas";
+import { AppError } from "@/core/app-error";
 
-/** Thin wrappers keep the UI consistent and provide a hook for future logic. */
+/** Server-only wrappers keep UI usage consistent and enable caching. */
+export const getEventsService = async (): Promise<EventDetailDto[]> => {
+  return getEventsDAL();
+};
+
+export const createEventService = async (
+  event: unknown,
+): Promise<EventDetailDto> => {
+  const validatedEvent = EventSchema.safeParse(event);
+
+  if (!validatedEvent.success) {
+    throw new AppError("VALIDATION", "Invalid event payload", {
+      status: 400,
+      cause: validatedEvent.error.issues,
+    });
+  }
+
+  return createEventDAL(validatedEvent.data);
+};
+
 export const getBookingsByEventService = async (
-  eventId: Types.ObjectId
-): Promise<AppResult<BookingDto[]>> => {
-  return await getBookingsByEventAction(eventId);
+  eventId: string,
+): Promise<BookingDto[]> => {
+  return getBookingsByEventDAL(eventId);
 };
 
 export const getSimilarEventsBySlugService = async (
-  slug: string
-): Promise<AppResult<SimilarEventDto[]>> => {
-  return getSimilarEventsBySlugAction(slug);
+  slug: string,
+): Promise<SimilarEventDto[]> => {
+  return getSimilarEventsBySlugDAL(slug);
+};
+
+export const getEventBySlugService = async (
+  slug: string,
+): Promise<EventDetailDto> => {
+  return getEventBySlugDAL(slug);
+};
+
+export const deleteEventService = async (
+  eventId: string,
+): Promise<EventDetailDto> => {
+  return deleteEventDAL(eventId);
 };
 
 export const bookEventService = async (
   email: string,
-  eventId: string
-): Promise<AppResult<BookingDto>> => {
-  return bookEventAction(email, eventId);
+  eventId: string,
+): Promise<BookingDto> => {
+  return bookEventDAL(email, eventId);
 };

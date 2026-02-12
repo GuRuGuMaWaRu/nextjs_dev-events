@@ -1,5 +1,6 @@
 export {
   Event,
+  type EventMode,
   type EventAttrs,
   type EventDocument,
   type EventModel,

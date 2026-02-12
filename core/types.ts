@@ -5,7 +5,9 @@ export type AppErrorCode =
   | "NOT_FOUND"
   | "BUSINESS"
   | "INTERNAL"
-  | "CONFLICT";
+  | "CONFLICT"
+  | "DB"
+  | "UNKNOWN";
 
 export type AppResult<T> =
   | {
@@ -17,4 +19,5 @@ export type AppResult<T> =
       code: AppErrorCode;
       message?: string;
       fieldErrors?: Record<string, string>;
+      details?: unknown;
     };

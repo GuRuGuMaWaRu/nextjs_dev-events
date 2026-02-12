@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { Event } from "@/database";
-import { connectToDatabase } from "@/lib/mongodb";
+import { toHttpStatus } from "@/lib/http-status";
+import { getEventBySlugAction } from "@/features/Event/actions";
 
 export async function GET(
   _request: Request,
@@ -9,34 +9,29 @@ export async function GET(
     params,
   }: {
     params: Promise<{ slug: string }>;
-  }
+  },
 ): Promise<NextResponse> {
   try {
-    await connectToDatabase();
     const { slug } = await params;
 
-    if (!slug) {
-      return NextResponse.json(
-        { message: "Event slug is required" },
-        { status: 400 }
-      );
+    const eventResult = await getEventBySlugAction(slug);
+
+    if (!eventResult.ok) {
+      const status = toHttpStatus(eventResult.code);
+      const message = eventResult.message ?? "Event fetching failed";
+      return NextResponse.json({ message, error: message }, { status });
     }
 
-    const sanitizedSlug = slug.trim().toLowerCase();
-
-    const event = await Event.findOne({ slug: sanitizedSlug })
-      .select("-__v")
-      .lean();
-    if (!event) {
+    if (!eventResult.data) {
       return NextResponse.json(
-        { message: `Event with slug "${sanitizedSlug}" not found` },
-        { status: 404 }
+        { message: "Event not found", error: "Event not found" },
+        { status: 404 },
       );
     }
 
     return NextResponse.json(
-      { message: "Event fetched successfully", event },
-      { status: 200 }
+      { message: "Event fetched successfully", event: eventResult.data },
+      { status: 200 },
     );
   } catch (error) {
     console.error(error);
@@ -45,7 +40,7 @@ export async function GET(
         message: "Event fetching failed",
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

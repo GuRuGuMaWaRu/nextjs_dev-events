@@ -6,11 +6,12 @@ import EventAgenda from "@/features/Event/components/EventAgenda";
 import EventTags from "@/features/Event/components/EventTags";
 import BookEvent from "@/features/Event/components/BookEvent";
 import { EventCard } from "@/features/Event/components/EventCard";
-import {
-  getBookingsByEventService,
-  getSimilarEventsBySlugService,
-} from "@/features/Event/service";
 import { handleAppError } from "@/lib/app-error-ui";
+import {
+  getBookingsByEventAction,
+  getEventBySlugAction,
+  getSimilarEventsBySlugAction,
+} from "@/features/Event/actions";
 
 const EventDetailsPage = async ({
   params,
@@ -19,31 +20,30 @@ const EventDetailsPage = async ({
 }) => {
   const { slug } = await params;
 
-  const request = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/events/${slug}`
-  );
-
-  if (!request.ok) {
-    if (request.status === 404) {
+  const eventResult = await getEventBySlugAction(slug);
+  if (!eventResult.ok) {
+    if (eventResult.code === "NOT_FOUND") {
       return notFound();
     }
 
-    return <div>Error: Failed to fetch event details</div>;
+    const message = handleAppError(eventResult, {
+      fallbackMessage: "Failed to fetch event details",
+    });
+    return <div>Error: {message}</div>;
   }
 
-  const { event, error } = await request.json();
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
+  const event = eventResult.data;
   if (!event) {
     return notFound();
   }
 
-  const bookingsResult = await getBookingsByEventService(event._id);
+  const [bookingsResult, similarEventsResult] = await Promise.all([
+    getBookingsByEventAction(event.id),
+    getSimilarEventsBySlugAction(event.slug),
+  ]);
+
   const bookingCount = bookingsResult.ok
-    ? bookingsResult.data?.length ?? 0
+    ? (bookingsResult.data?.length ?? 0)
     : 0;
   const bookingCountError = bookingsResult.ok
     ? null
@@ -51,12 +51,11 @@ const EventDetailsPage = async ({
         fallbackMessage: "Booking count unavailable.",
       });
 
-  const similarEventsResult = await getSimilarEventsBySlugService(event.slug);
   const similarEventsError = similarEventsResult.ok
     ? null
     : handleAppError(similarEventsResult);
   const similarEvents = similarEventsResult.ok
-    ? similarEventsResult.data ?? []
+    ? (similarEventsResult.data ?? [])
     : [];
 
   return (
@@ -135,7 +134,7 @@ const EventDetailsPage = async ({
               <p className="text-sm">Be the first to book your spot.</p>
             )}
 
-            <BookEvent eventId={event._id.toString()} />
+            <BookEvent eventId={event.id} />
           </div>
         </aside>
       </div>
@@ -146,8 +145,8 @@ const EventDetailsPage = async ({
           <p className="text-sm">{similarEventsError}</p>
         ) : (
           <div className="events">
-            {similarEvents.map((event) => (
-              <EventCard key={event.slug} {...event} />
+            {similarEvents.map((similarEvent) => (
+              <EventCard key={similarEvent.slug} {...similarEvent} />
             ))}
           </div>
         )}
