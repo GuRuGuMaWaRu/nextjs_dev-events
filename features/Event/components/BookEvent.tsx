@@ -1,18 +1,20 @@
 "use client";
 
 import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
+import posthog from "posthog-js";
 
 import { toastAppError } from "@/lib/app-error-ui";
 import { bookEventAction } from "@/features/Event/actions";
 import { AppResult } from "@/core/types";
 import { BookingDto } from "@/features/Event/types";
-import { toast } from "sonner";
 
 type BookEventProps = {
   eventId: string;
+  slug: string;
 };
 
-const BookEvent = ({ eventId }: BookEventProps) => {
+const BookEvent = ({ eventId, slug }: BookEventProps) => {
   const [state, formAction, isPending] = useActionState<
     AppResult<BookingDto> | null,
     FormData
@@ -34,10 +36,12 @@ const BookEvent = ({ eventId }: BookEventProps) => {
 
     if (state.ok) {
       toast.success("Event booked successfully");
+      posthog.capture("event_booked", { eventId, slug });
     } else {
       toastAppError(state);
+      posthog.captureException(state.message);
     }
-  }, [state]);
+  }, [state, eventId, slug]);
 
   return (
     <section id="book-event">
