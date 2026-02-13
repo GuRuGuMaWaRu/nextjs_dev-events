@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cacheLife, cacheTag, revalidateTag, revalidatePath } from "next/cache";
+import { revalidateTag, revalidatePath, unstable_cache } from "next/cache";
 
 import { AppError } from "@/core/app-error";
 import {
@@ -20,15 +20,56 @@ import {
 } from "@/features/Event/db";
 import { toBookingDto, toEventDetailDto } from "@/features/Event/helpers";
 
-export const getEventsDAL = async (): Promise<EventDetailDto[]> => {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag("events");
+const DAL_REVALIDATE_SECONDS = 60;
 
-  try {
+const EVENTS_TAG = "events";
+const EVENT_DETAILS_TAG = "event-details";
+const SIMILAR_EVENTS_TAG = "similar-events";
+const BOOKINGS_TAG = "bookings";
+
+const getEventsCached = unstable_cache(
+  async (): Promise<EventDetailDto[]> => {
     const events = await getEventsDB();
 
     return events?.map((event) => toEventDetailDto(event)) ?? [];
+  },
+  ["event-dal-get-events"],
+  { revalidate: DAL_REVALIDATE_SECONDS, tags: [EVENTS_TAG] },
+);
+
+const getEventBySlugCached = unstable_cache(
+  async (slug: string): Promise<EventDetailDto> => {
+    const event = await getEventBySlugDB(slug);
+
+    return toEventDetailDto(event);
+  },
+  ["event-dal-get-event-by-slug"],
+  { revalidate: DAL_REVALIDATE_SECONDS, tags: [EVENT_DETAILS_TAG] },
+);
+
+const getSimilarEventsBySlugCached = unstable_cache(
+  async (slug: string): Promise<SimilarEventDto[]> => {
+    const similarEvents = await getSimilarEventsBySlugDB(slug);
+
+    return similarEvents?.map((event) => toEventDetailDto(event)) ?? [];
+  },
+  ["event-dal-get-similar-events-by-slug"],
+  { revalidate: DAL_REVALIDATE_SECONDS, tags: [SIMILAR_EVENTS_TAG] },
+);
+
+const getBookingsByEventCached = unstable_cache(
+  async (eventId: string): Promise<BookingDto[]> => {
+    const bookings = await getBookingsByEventDB(eventId);
+
+    return bookings?.map((booking) => toBookingDto(booking)) ?? [];
+  },
+  ["event-dal-get-bookings-by-event"],
+  { revalidate: DAL_REVALIDATE_SECONDS, tags: [BOOKINGS_TAG] },
+);
+
+export const getEventsDAL = async (): Promise<EventDetailDto[]> => {
+  try {
+    return await getEventsCached();
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
@@ -44,7 +85,9 @@ export const createEventDAL = async (
   try {
     const newEvent = await createEventDB(event);
 
-    revalidateTag("events", "max");
+    revalidateTag(EVENTS_TAG, "max");
+    revalidateTag(EVENT_DETAILS_TAG, "max");
+    revalidateTag(SIMILAR_EVENTS_TAG, "max");
     revalidatePath("/");
 
     return toEventDetailDto(newEvent);
@@ -63,9 +106,10 @@ export const deleteEventDAL = async (
   try {
     const deletedEvent = await deleteEventDB(eventId);
 
-    revalidateTag("events", "max");
-    revalidateTag(`event-details-${deletedEvent.slug}`, "max");
-    revalidateTag(`similar-events-${deletedEvent.slug}`, "max");
+    revalidateTag(EVENTS_TAG, "max");
+    revalidateTag(EVENT_DETAILS_TAG, "max");
+    revalidateTag(SIMILAR_EVENTS_TAG, "max");
+    revalidateTag(BOOKINGS_TAG, "max");
 
     return toEventDetailDto(deletedEvent);
   } catch (error) {
@@ -80,14 +124,8 @@ export const deleteEventDAL = async (
 export const getSimilarEventsBySlugDAL = async (
   slug: string,
 ): Promise<SimilarEventDto[]> => {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(`similar-events-${slug}`);
-
   try {
-    const similarEvents = await getSimilarEventsBySlugDB(slug);
-
-    return similarEvents?.map((event) => toEventDetailDto(event)) ?? [];
+    return await getSimilarEventsBySlugCached(slug);
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
@@ -102,14 +140,8 @@ export const getSimilarEventsBySlugDAL = async (
 export const getEventBySlugDAL = async (
   slug: string,
 ): Promise<EventDetailDto> => {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(`event-details-${slug}`);
-
   try {
-    const event = await getEventBySlugDB(slug);
-
-    return toEventDetailDto(event);
+    return await getEventBySlugCached(slug);
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
@@ -126,7 +158,7 @@ export const bookEventDAL = async (
   try {
     const booking = await bookEventDB(email, eventId);
 
-    revalidateTag(`bookings-${eventId}`, "max");
+    revalidateTag(BOOKINGS_TAG, "max");
 
     return toBookingDto(booking);
   } catch (error) {
@@ -152,14 +184,8 @@ export const bookEventDAL = async (
 export const getBookingsByEventDAL = async (
   eventId: string,
 ): Promise<BookingDto[]> => {
-  "use cache";
-  cacheLife("minutes");
-  cacheTag(`bookings-${eventId}`);
-
   try {
-    const bookings = await getBookingsByEventDB(eventId);
-
-    return bookings?.map((booking) => toBookingDto(booking)) ?? [];
+    return await getBookingsByEventCached(eventId);
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
