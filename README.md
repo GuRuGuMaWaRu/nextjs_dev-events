@@ -1,18 +1,24 @@
-### Next.js 16.1.1
+# Dev Events
 
-Mainly trying various styling.
+### Tech
 
-#### Server-only vs client-safe services
+- Next.js
+- Typescript
+- Tailwind
+- Mongoose
 
-This project separates cached/server-only logic from client-safe utilities to
-avoid Next.js errors like:
-"It is not allowed to define inline "use cache" annotated functions in Client Components."
+### Main functionality
 
-- `features/Event/service.server.ts` is server-only and can call cached DAL
-  functions.
-- `features/Event/dal.ts` is server-only and may use `next/cache` + `'use cache'`.
-- `features/Event/service.ts` is client-safe and should not import anything that
-  uses `next/cache`.
+1. Events page
+2. Event Details page
+3. You can enroll for an event via Event Details page
 
-If a Client Component needs to call a service, import from `service.ts`.
-If a Server Component needs cached data, import from `service.server.ts`.
+Since this is just a test project the rest of the pages are not functional.
+
+### App Screenshots
+
+#### Home
+![Dev Events Home](./public/readme/dev-events-1.webp)
+
+#### Event Details
+![Dev Events Details](./public/readme/dev-events-2.webp)
